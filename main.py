@@ -18,8 +18,8 @@ import pygame
 import hjson
 import json
 from math import sin, cos, sqrt, atan2, radians
-from asdex import Asdex
-from radar import Radar
+from asdex import Asdex, asdex_pixel
+from radar import Radar, radar_pixel
 
 with open('airport.hjson') as f:
   airport_data = hjson.loads(f.read())
@@ -42,14 +42,16 @@ def distance(origin, destination):
 screen_width = 1200
 screen_height = 600
 frame_rate = 30
-px_per_nm = screen_height / distance((airport_data["top"], 0), (airport_data["bottom"], 0))
+asdex_px_per_nm = screen_height / distance((airport_data["asdex_top"], 0), (airport_data["asdex_bottom"], 0))
+radar_px_per_nm = screen_height / distance((airport_data["top"], 0), (airport_data["bottom"], 0))
+scene = True
 
 pygame.init()
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 class Aircraft(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, loc, speed, heading):
         pygame.sprite.Sprite.__init__(self)
         self.surf = pygame.Surface((75, 15), pygame.SRCALPHA)
         pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
@@ -57,23 +59,27 @@ class Aircraft(pygame.sprite.Sprite):
         self.textSurf = self.font.render("UAL121", 1, (86, 176, 91))
         self.surf.blit(self.textSurf, (9, 0))
         self.rect=self.surf.get_rect()
-        self.x = 600 / radar.scale
-        self.y = 300 / radar.scale
-        self.heading = 60
-        self.speed = 250
+        self.asdex_x, self.asdex_y = asdex_pixel(loc, airport_data, asdex.scale)
+        self.radar_x, self.radar_y = radar_pixel(loc, airport_data, radar.scale)
+        self.heading = heading
+        self.speed = speed
     
-    def update(self, elapsed):
-        self.h = ((self.speed * px_per_nm) / 3600 * (elapsed / 1000)) * 60
-        self.x += (sin(radians(self.heading)) * self.h) / radar.scale
-        self.y -= (cos(radians(self.heading)) * self.h) / radar.scale
+    def update(self, elapsed, scene):
+        self.asdex_h = ((self.speed * asdex_px_per_nm) / 3600 * (elapsed / 1000)) * 60
+        self.radar_h = ((self.speed * radar_px_per_nm) / 3600 * (elapsed / 1000)) * 60
+        self.asdex_x += (sin(radians(self.heading)) * self.asdex_h)
+        self.asdex_y -= (cos(radians(self.heading)) * self.asdex_h)
+        self.radar_x += (sin(radians(self.heading)) * self.radar_h)
+        self.radar_y -= (cos(radians(self.heading)) * self.radar_h)
 
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
-aircraft = Aircraft()
+aircrafts = pygame.sprite.Group()
+aircrafts.add(Aircraft((32.72426133333333, -117.212722), 250, 60))
+aircrafts.add(Aircraft((32.73710425, -117.20420971), 18, 94.2))
 elapsed = 1
 sweep = 0
 running = True
-scene = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -81,16 +87,30 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 scene = not scene
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = pygame.mouse.get_pos()
+            if scene:
+                print((x / asdex.scale) + airport_data["asdex_left"])
+                print(((y / asdex.scale) - airport_data["asdex_top"]) * -1)
+            else:
+                print((x / radar.scale) + airport_data["left"])
+                print(((y / radar.scale) - airport_data["top"]) * -1)
 
     if not scene:
         screen.blit(radar.surface, (0, 0))
-        if sweep % 60 == 0:
-            aircraft.update(elapsed)
-        sweep += 1
-        screen.blit(aircraft.surf, (aircraft.x * radar.scale, aircraft.y * radar.scale))
-    
+        for aircraft in aircrafts:
+            if sweep % 60 == 0:
+                aircraft.update(elapsed, scene)
+            screen.blit(aircraft.surf, (aircraft.radar_x, aircraft.radar_y))
+
     else:
         screen.blit(asdex.surface, (0, 0))
+        for aircraft in aircrafts:
+            if sweep % 60 == 0:
+                aircraft.update(elapsed, scene)
+            screen.blit(aircraft.surf, (aircraft.asdex_x, aircraft.asdex_y))
+    
+    sweep += 1
         
     pygame.display.flip()
     elapsed = clock.tick(frame_rate)
