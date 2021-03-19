@@ -45,6 +45,7 @@ frame_rate = 30
 asdex_px_per_nm = screen_height / distance((airport_data["asdex_top"], 0), (airport_data["asdex_bottom"], 0))
 radar_px_per_nm = screen_height / distance((airport_data["top"], 0), (airport_data["bottom"], 0))
 scene = True
+debug = False
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -54,15 +55,18 @@ class Aircraft(pygame.sprite.Sprite):
     def __init__(self, loc, speed, heading, name, altitude):
         pygame.sprite.Sprite.__init__(self)
         self.name = name
+        self.surf = pygame.Surface((750, 15), pygame.SRCALPHA)
+        # pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
         self.font = pygame.font.Font("font.ttf", 15)
         self.textSurf = self.font.render(name, 1, (86, 176, 91))
+        # self.surf.blit(self.textSurf, (9, 0))
         self.rect=self.surf.get_rect()
         self.asdex_x, self.asdex_y = asdex_pixel(loc, airport_data, asdex.scale)
         self.radar_x, self.radar_y = radar_pixel(loc, airport_data, radar.scale)
         self.heading = heading
         self.speed = speed
         self.altitude = altitude
-    
+
     def update(self, elapsed, scene):
         self.asdex_h = ((self.speed * asdex_px_per_nm) / 3600 * (elapsed / 1000)) * 60
         self.radar_h = ((self.speed * radar_px_per_nm) / 3600 * (elapsed / 1000)) * 60
@@ -70,6 +74,25 @@ class Aircraft(pygame.sprite.Sprite):
         self.asdex_y -= (cos(radians(self.heading)) * self.asdex_h)
         self.radar_x += (sin(radians(self.heading)) * self.radar_h)
         self.radar_y -= (cos(radians(self.heading)) * self.radar_h)
+        self.label()
+
+    def label(self):
+        aircraft.textSurf.fill(pygame.Color(0, 0, 0, 0))
+        aircraft.textSurf.set_alpha(255)
+        # Determine display text and size
+        if debug:
+            displayText = f'{self.name} | {self.altitude}     '
+        else:
+            displayText = f'{self.name}     '
+        # Determine the x, y size of displayText according to pygame
+        # Then add 5 because it's slightly too small (shrug)
+        displaySize = tuple(n + 5 for n in self.font.size(displayText))
+
+        # Clear and redraw the text surface
+        self.textSurf = self.font.render(str(displayText), 1, (86, 176, 91))
+        self.surf = pygame.Surface(displaySize, pygame.SRCALPHA)
+        self.surf.blit(self.textSurf, (9, 0))
+
 
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
@@ -88,6 +111,11 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 scene = not scene
+            # F1 to toggle "debug mode"
+            if event.key == pygame.K_F1:
+                debug = not debug
+                for aircraft in aircrafts:
+                    aircraft.label()
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
             if scene:
