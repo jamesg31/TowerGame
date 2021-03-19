@@ -18,8 +18,8 @@ import pygame
 import hjson
 import json
 from math import sin, cos, sqrt, atan2, radians
-from asdex import Asdex, asdex_pixel
-from radar import Radar, radar_pixel
+from asdex import Asdex
+from radar import Radar
 
 with open('airport.hjson') as f:
   airport_data = hjson.loads(f.read())
@@ -59,8 +59,8 @@ class Aircraft(pygame.sprite.Sprite):
         self.textSurf = self.font.render("UAL121", 1, (86, 176, 91))
         self.surf.blit(self.textSurf, (9, 0))
         self.rect=self.surf.get_rect()
-        self.asdex_x, self.asdex_y = asdex_pixel(loc, airport_data, asdex.scale)
-        self.radar_x, self.radar_y = radar_pixel(loc, airport_data, radar.scale)
+        self.asdex_x, self.asdex_y = asdex.cood_to_pixel(loc)
+        self.radar_x, self.radar_y = radar.cood_to_pixel(loc)
         self.heading = heading
         self.speed = speed
     
