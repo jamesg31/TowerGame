@@ -1,6 +1,6 @@
 # Copyright (c) 2021 James Gardner.
 # This file is part of TowerATC (https://github.com/jamesg31/TowerATC).
-# 
+#
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -16,14 +16,14 @@
 
 import pygame
 import hjson
-import json
 from math import sin, cos, sqrt, atan2, radians
 from asdex import Asdex, asdex_pixel
 from radar import Radar, radar_pixel
 
 with open('airport.hjson') as f:
-  airport_data = hjson.loads(f.read())
-  #airport_data = json.load(f)
+    airport_data = hjson.loads(f.read())
+    # airport_data = json.load(f)
+
 
 def distance(origin, destination):
     lat1, lon1 = origin
@@ -39,16 +39,20 @@ def distance(origin, destination):
     d = radius * c
     return d
 
+
 screen_width = 1200
 screen_height = 600
 frame_rate = 30
-asdex_px_per_nm = screen_height / distance((airport_data["asdex_top"], 0), (airport_data["asdex_bottom"], 0))
-radar_px_per_nm = screen_height / distance((airport_data["top"], 0), (airport_data["bottom"], 0))
+asdex_px_per_nm = screen_height / distance(
+    (airport_data["asdex_top"], 0), (airport_data["asdex_bottom"], 0))
+radar_px_per_nm = screen_height / distance(
+    (airport_data["top"], 0), (airport_data["bottom"], 0))
 scene = True
 
 pygame.init()
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height))
+
 
 class Aircraft(pygame.sprite.Sprite):
     def __init__(self, loc, speed, heading):
@@ -58,19 +62,24 @@ class Aircraft(pygame.sprite.Sprite):
         self.font = pygame.font.Font("font.ttf", 15)
         self.textSurf = self.font.render("UAL121", 1, (86, 176, 91))
         self.surf.blit(self.textSurf, (9, 0))
-        self.rect=self.surf.get_rect()
-        self.asdex_x, self.asdex_y = asdex_pixel(loc, airport_data, asdex.scale)
-        self.radar_x, self.radar_y = radar_pixel(loc, airport_data, radar.scale)
+        self.rect = self.surf.get_rect()
+        self.asdex_x, self.asdex_y = asdex_pixel(
+            loc, airport_data, asdex.scale)
+        self.radar_x, self.radar_y = radar_pixel(
+            loc, airport_data, radar.scale)
         self.heading = heading
         self.speed = speed
-    
+
     def update(self, elapsed, scene):
-        self.asdex_h = ((self.speed * asdex_px_per_nm) / 3600 * (elapsed / 1000)) * 60
-        self.radar_h = ((self.speed * radar_px_per_nm) / 3600 * (elapsed / 1000)) * 60
+        self.asdex_h = (
+            (self.speed * asdex_px_per_nm) / 3600 * (elapsed / 1000)) * 60
+        self.radar_h = (
+            (self.speed * radar_px_per_nm) / 3600 * (elapsed / 1000)) * 60
         self.asdex_x += (sin(radians(self.heading)) * self.asdex_h)
         self.asdex_y -= (cos(radians(self.heading)) * self.asdex_h)
         self.radar_x += (sin(radians(self.heading)) * self.radar_h)
         self.radar_y -= (cos(radians(self.heading)) * self.radar_h)
+
 
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
@@ -109,8 +118,8 @@ while running:
             if sweep % 60 == 0:
                 aircraft.update(elapsed, scene)
             screen.blit(aircraft.surf, (aircraft.asdex_x, aircraft.asdex_y))
-    
+
     sweep += 1
-        
+
     pygame.display.flip()
     elapsed = clock.tick(frame_rate)
