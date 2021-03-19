@@ -16,12 +16,6 @@
 
 import pygame
 
-def asdex_pixel(location, data, scale):
-    lat, lon = location
-    x = (lon - data["asdex_left"]) * scale
-    y = (data["asdex_top"] - lat) * scale
-    return x, y
-
 class Asdex:
     def __init__(self, data, screen_height, screen_width):
         self.data = data
@@ -36,7 +30,7 @@ class Asdex:
         for shape in self.data["shapes"]:
             new_shape = []
             for coord in shape["points"]:
-                new_shape.append(asdex_pixel(coord, self.data, self.scale))
+                new_shape.append(self.cood_to_pixel(coord))
             if shape["type"] == "RWAY":
                 color = (29, 29, 28)
             elif shape["type"] == "BLDG":
@@ -44,6 +38,12 @@ class Asdex:
             else:
                 color = (57, 57, 57)
             pygame.draw.polygon(self.surface, color, new_shape)
+
+    def cood_to_pixel(self, location):
+        lat, lon = location
+        x = (lon - self.data["asdex_left"]) * self.scale
+        y = (self.data["asdex_top"] - lat) * self.scale
+        return x, y
 
     def handle_event(self, event):
         pass

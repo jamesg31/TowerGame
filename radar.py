@@ -16,12 +16,6 @@
 
 import pygame
 
-def radar_pixel(location, data, scale):
-    lat, lon = location
-    x = (lon - data["left"]) * scale
-    y = (data["top"] - lat) * scale
-    return x, y
-
 class Radar:
     def __init__(self, data, screen_height, screen_width):
         self.data = data
@@ -33,11 +27,17 @@ class Radar:
 
     def render(self):
         self.surface.fill((0, 0, 0))
-        self.runway_start = radar_pixel((self.data["runway"]["start_lat"], self.data["runway"]["start_long"]), self.data, self.scale)
-        self.runway_end = radar_pixel((self.data["runway"]["end_lat"], self.data["runway"]["end_long"]), self.data, self.scale)
+        self.runway_start = self.cood_to_pixel((self.data["runway"]["start_lat"], self.data["runway"]["start_long"]))
+        self.runway_end = self.cood_to_pixel((self.data["runway"]["end_lat"], self.data["runway"]["end_long"]))
         pygame.draw.line(self.surface, (255, 255, 255), self.runway_start, self.runway_end, width=3)
         for line in self.data["lines"]:
-            pygame.draw.line(self.surface, (255, 255, 255), radar_pixel((line["start_lat"], line["start_long"]), self.data, self.scale), radar_pixel((line["end_lat"], line["end_long"]), self.data, self.scale))
+            pygame.draw.line(self.surface, (255, 255, 255), self.cood_to_pixel((line["start_lat"], line["start_long"])), self.cood_to_pixel((line["end_lat"], line["end_long"])))
+        
+    def cood_to_pixel(self, location):
+        lat, lon = location
+        x = (lon - self.data["left"]) * self.scale
+        y = (self.data["top"] - lat) * self.scale
+        return x, y
 
     def handle_event(self, event):
         pass

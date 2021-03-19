@@ -18,8 +18,8 @@ import pygame
 import hjson
 import json
 from math import sin, cos, sqrt, atan2, radians
-from asdex import Asdex, asdex_pixel
-from radar import Radar, radar_pixel
+from asdex import Asdex
+from radar import Radar
 
 with open('airport.hjson') as f:
   airport_data = hjson.loads(f.read())
@@ -61,19 +61,15 @@ class Aircraft(pygame.sprite.Sprite):
         self.textSurf = self.font.render(name, 1, (86, 176, 91))
         # self.surf.blit(self.textSurf, (9, 0))
         self.rect=self.surf.get_rect()
-        self.asdex_x, self.asdex_y = asdex_pixel(loc, airport_data, asdex.scale)
-        self.radar_x, self.radar_y = radar_pixel(loc, airport_data, radar.scale)
+        self.y, self.x = loc
         self.heading = heading
         self.speed = speed
         self.altitude = altitude
 
     def update(self, elapsed, scene):
-        self.asdex_h = ((self.speed * asdex_px_per_nm) / 3600 * (elapsed / 1000)) * 60
-        self.radar_h = ((self.speed * radar_px_per_nm) / 3600 * (elapsed / 1000)) * 60
-        self.asdex_x += (sin(radians(self.heading)) * self.asdex_h)
-        self.asdex_y -= (cos(radians(self.heading)) * self.asdex_h)
-        self.radar_x += (sin(radians(self.heading)) * self.radar_h)
-        self.radar_y -= (cos(radians(self.heading)) * self.radar_h)
+        self.h = (self.speed / 3600 * (elapsed / 1000)) * 60
+        self.y += (cos(radians(self.heading)) * (self.h / 110.574))
+        self.x -= (sin(radians(self.heading)) * (self.h / (111.320 *cos(self.y))))
         self.label()
 
     def label(self):
@@ -93,7 +89,6 @@ class Aircraft(pygame.sprite.Sprite):
         self.surf = pygame.Surface(displaySize, pygame.SRCALPHA)
         pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
         self.surf.blit(self.textSurf, (9, 0))
-
 
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
@@ -131,14 +126,14 @@ while running:
         for aircraft in aircrafts:
             if sweep % 60 == 0:
                 aircraft.update(elapsed, scene)
-            screen.blit(aircraft.surf, (aircraft.radar_x, aircraft.radar_y))
+            screen.blit(aircraft.surf, radar.cood_to_pixel((aircraft.y, aircraft.x)))
 
     else:
         screen.blit(asdex.surface, (0, 0))
         for aircraft in aircrafts:
             if sweep % 60 == 0:
                 aircraft.update(elapsed, scene)
-            screen.blit(aircraft.surf, (aircraft.asdex_x, aircraft.asdex_y))
+            screen.blit(aircraft.surf, asdex.cood_to_pixel((aircraft.y, aircraft.x)))
     
     sweep += 1
         
