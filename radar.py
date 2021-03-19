@@ -18,6 +18,7 @@ import pygame
 
 class Radar:
     def __init__(self, data, screen_height, screen_width):
+        self.name = "radar"
         self.data = data
         self.screen_height = screen_height
         self.screen_width = screen_width

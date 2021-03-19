@@ -42,7 +42,6 @@ def distance(origin, destination):
 screen_width = 1200
 screen_height = 600
 frame_rate = 30
-scene = True
 debug = False
 
 pygame.init()
@@ -101,13 +100,17 @@ aircrafts.add(Aircraft(
 elapsed = 1
 sweep = 0
 running = True
+scene = asdex
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                scene = not scene
+                if scene.name == "asdex":
+                    scene = radar
+                else:
+                    scene = asdex
             # F1 to toggle "debug mode"
             if event.key == pygame.K_F1:
                 debug = not debug
@@ -116,26 +119,18 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
             if debug:
-                if scene:
+                if scene.name == "asdex":
                     print((x / asdex.scale) + airport_data["asdex_left"])
                     print(((y / asdex.scale) - airport_data["asdex_top"]) * -1)
                 else:
                     print((x / radar.scale) + airport_data["left"])
                     print(((y / radar.scale) - airport_data["top"]) * -1)
 
-    if not scene:
-        screen.blit(radar.surface, (0, 0))
-        for aircraft in aircrafts:
-            if sweep % 60 == 0:
-                aircraft.update(elapsed, scene)
-            screen.blit(aircraft.surf, radar.cood_to_pixel((aircraft.y, aircraft.x)))
-
-    else:
-        screen.blit(asdex.surface, (0, 0))
-        for aircraft in aircrafts:
-            if sweep % 60 == 0:
-                aircraft.update(elapsed, scene)
-            screen.blit(aircraft.surf, asdex.cood_to_pixel((aircraft.y, aircraft.x)))
+    screen.blit(scene.surface, (0, 0))
+    for aircraft in aircrafts:
+        if sweep % 60 == 0:
+            aircraft.update(elapsed, scene)
+        screen.blit(aircraft.surf, scene.cood_to_pixel((aircraft.y, aircraft.x)))
     
     sweep += 1
         
