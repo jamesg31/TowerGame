@@ -51,18 +51,17 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 class Aircraft(pygame.sprite.Sprite):
-    def __init__(self, loc, speed, heading):
+    def __init__(self, loc, speed, heading, name, altitude):
         pygame.sprite.Sprite.__init__(self)
-        self.surf = pygame.Surface((75, 15), pygame.SRCALPHA)
-        pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
+        self.name = name
         self.font = pygame.font.Font("font.ttf", 15)
-        self.textSurf = self.font.render("UAL121", 1, (86, 176, 91))
-        self.surf.blit(self.textSurf, (9, 0))
+        self.textSurf = self.font.render(name, 1, (86, 176, 91))
         self.rect=self.surf.get_rect()
         self.asdex_x, self.asdex_y = asdex_pixel(loc, airport_data, asdex.scale)
         self.radar_x, self.radar_y = radar_pixel(loc, airport_data, radar.scale)
         self.heading = heading
         self.speed = speed
+        self.altitude = altitude
     
     def update(self, elapsed, scene):
         self.asdex_h = ((self.speed * asdex_px_per_nm) / 3600 * (elapsed / 1000)) * 60
@@ -75,8 +74,10 @@ class Aircraft(pygame.sprite.Sprite):
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
 aircrafts = pygame.sprite.Group()
-aircrafts.add(Aircraft((32.72426133333333, -117.212722), 250, 60))
-aircrafts.add(Aircraft((32.73710425, -117.20420971), 18, 94.2))
+aircrafts.add(Aircraft(
+    (32.72426133333333, -117.212722), 250, 60, 'Plane1', 6000))
+aircrafts.add(Aircraft(
+    (32.73710425, -117.20420971), 18, 94.2, 'Plane2', 0))
 elapsed = 1
 sweep = 0
 running = True
