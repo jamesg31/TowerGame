@@ -59,24 +59,20 @@ class Aircraft(pygame.sprite.Sprite):
         self.textSurf = self.font.render("UAL121", 1, (86, 176, 91))
         self.surf.blit(self.textSurf, (9, 0))
         self.rect=self.surf.get_rect()
-        self.asdex_x, self.asdex_y = asdex.cood_to_pixel(loc)
-        self.radar_x, self.radar_y = radar.cood_to_pixel(loc)
+        self.y, self.x = loc
         self.heading = heading
         self.speed = speed
     
     def update(self, elapsed, scene):
-        self.asdex_h = ((self.speed * asdex_px_per_nm) / 3600 * (elapsed / 1000)) * 60
-        self.radar_h = ((self.speed * radar_px_per_nm) / 3600 * (elapsed / 1000)) * 60
-        self.asdex_x += (sin(radians(self.heading)) * self.asdex_h)
-        self.asdex_y -= (cos(radians(self.heading)) * self.asdex_h)
-        self.radar_x += (sin(radians(self.heading)) * self.radar_h)
-        self.radar_y -= (cos(radians(self.heading)) * self.radar_h)
+        self.h = (self.speed / 3600 * (elapsed / 1000)) * 60
+        self.y += (cos(radians(self.heading)) * (self.h / 110.574))
+        self.x -= (sin(radians(self.heading)) * (self.h / (111.320 *cos(self.y))))
 
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
 aircrafts = pygame.sprite.Group()
-aircrafts.add(Aircraft((32.72426133333333, -117.212722), 250, 60))
-aircrafts.add(Aircraft((32.73710425, -117.20420971), 18, 94.2))
+aircrafts.add(Aircraft((32.72426133333333, -117.212722), 250, 180))
+aircrafts.add(Aircraft((32.73710425, -117.20420971), 18, 0))
 elapsed = 1
 sweep = 0
 running = True
@@ -101,14 +97,14 @@ while running:
         for aircraft in aircrafts:
             if sweep % 60 == 0:
                 aircraft.update(elapsed, scene)
-            screen.blit(aircraft.surf, (aircraft.radar_x, aircraft.radar_y))
+            screen.blit(aircraft.surf, radar.cood_to_pixel((aircraft.y, aircraft.x)))
 
     else:
         screen.blit(asdex.surface, (0, 0))
         for aircraft in aircrafts:
             if sweep % 60 == 0:
                 aircraft.update(elapsed, scene)
-            screen.blit(aircraft.surf, (aircraft.asdex_x, aircraft.asdex_y))
+            screen.blit(aircraft.surf, asdex.cood_to_pixel((aircraft.y, aircraft.x)))
     
     sweep += 1
         
