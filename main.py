@@ -67,9 +67,11 @@ class Aircraft(pygame.sprite.Sprite):
         self.altitude = altitude
 
     def update(self, elapsed, scene):
+        # Calculate speed in km / second, then multiply by seconds since last update
         self.h = (self.speed / 3600 * (elapsed / 1000)) * 60
+        # Calculate difference to lat and lon using km to cood conversions
         self.y += (cos(radians(self.heading)) * (self.h / 110.574))
-        self.x -= (sin(radians(self.heading)) * (self.h / (111.320 *cos(self.y))))
+        self.x += (sin(radians(self.heading)) * (self.h / (111.320 *cos(self.y))))
         self.label()
 
     def label(self):
@@ -94,9 +96,9 @@ asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
 aircrafts = pygame.sprite.Group()
 aircrafts.add(Aircraft(
-    (32.72426133333333, -117.212722), 250, 60, 'Plane1', 6000))
+    (32.72426133333333, -117.212722), 250, 45, 'Plane1', 6000))
 aircrafts.add(Aircraft(
-    (32.73710425, -117.20420971), 18, 94.2, 'Plane2', 0))
+    (32.73710425, -117.20420971), 18, 180, 'Plane2', 0))
 elapsed = 1
 sweep = 0
 running = True
