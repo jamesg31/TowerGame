@@ -56,7 +56,7 @@ class Aircraft(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.name = name
         self.surf = pygame.Surface((750, 15), pygame.SRCALPHA)
-        # pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
+        pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
         self.font = pygame.font.Font("font.ttf", 15)
         self.textSurf = self.font.render(name, 1, (86, 176, 91))
         # self.surf.blit(self.textSurf, (9, 0))
@@ -91,6 +91,7 @@ class Aircraft(pygame.sprite.Sprite):
         # Clear and redraw the text surface
         self.textSurf = self.font.render(str(displayText), 1, (86, 176, 91))
         self.surf = pygame.Surface(displaySize, pygame.SRCALPHA)
+        pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
         self.surf.blit(self.textSurf, (9, 0))
 
 
