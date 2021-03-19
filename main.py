@@ -15,6 +15,7 @@
 # along with this software. If not, see <https://www.gnu.org/licenses/>.
 
 import pygame
+import pygame_gui
 import hjson
 import json
 from math import sin, cos, sqrt, atan2, radians
@@ -46,7 +47,18 @@ debug = False
 
 pygame.init()
 clock = pygame.time.Clock()
+
 screen = pygame.display.set_mode((screen_width, screen_height))
+manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
+
+altitude_dropdown = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(
+    relative_rect=pygame.Rect((30, screen_height - 80), (100, 50)),
+    starting_option='',
+    options_list=['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000'],
+    manager=manager,
+    visible=False)
+
+gui_elements = [altitude_dropdown]
 
 class Aircraft(pygame.sprite.Sprite):
     def __init__(self, loc, speed, heading, name, altitude):
@@ -74,6 +86,11 @@ class Aircraft(pygame.sprite.Sprite):
         self.label()
 
     def label(self):
+        # Change color if aircraft is selected
+        if selected == self:
+            self.color = (174, 179, 36)
+        else:
+            self.color = (86, 176, 91)
         aircraft.textSurf.fill(pygame.Color(0, 0, 0, 0))
         aircraft.textSurf.set_alpha(255)
         # Determine display text and size
@@ -94,10 +111,9 @@ class Aircraft(pygame.sprite.Sprite):
         # Moves the rect to the new location of the text, used for collisions
         self.rect.update(scene.cood_to_pixel((self.y, self.x)), displaySize)
 
-    def on_click(self):
-        self.color = (174, 179, 36)
-        self.label()
-        
+    def change_altitude(self, altitude):
+        self.altitude = altitude
+
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
 aircrafts = pygame.sprite.Group()
@@ -109,6 +125,7 @@ elapsed = 1
 sweep = 0
 running = True
 scene = asdex
+selected = None
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -126,14 +143,33 @@ while running:
                     aircraft.label()
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
-            print(x)
-            print(y)
+            collide = False
             # Detect aircraft clicks
             for aircraft in aircrafts:
                 if aircraft.rect.collidepoint(x, y):
-                    print("collide")
-                    aircraft.on_click()
+                    collide = True
+                    selected = aircraft
+                    # Update all aircraft colors
+                    for aircraft in aircrafts:
+                        aircraft.label()
 
+                    altitude_dropdown.selected_option = str(selected.altitude)
+                    altitude_dropdown.show()
+                
+            # Check if click is inside a gui element
+            for gui_element in gui_elements:
+                if gui_element.hover_point(x, y) or gui_element.is_focused:
+                    collide = True
+
+            # If no collision, unselect aircraft
+            if not collide:
+                selected = None
+                for aircraft in aircrafts:
+                    aircraft.label()
+                
+                show_gui = False
+                altitude_dropdown.hide()
+  
             # If in debug mode, print cood of screen click
             if debug:
                 if scene.name == "asdex":
@@ -141,7 +177,14 @@ while running:
                     print(((y / asdex.scale) - airport_data["asdex_top"]) * -1)
                 else:
                     print((x / radar.scale) + airport_data["left"])
-                    print(((y / radar.scale) - airport_data["top"]) * -1)
+                    print(((y / radar.scale) - airport_data["top"]) * -1)     
+
+        if event.type == pygame.USEREVENT:
+            if event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
+                if event.ui_element == altitude_dropdown:
+                    selected.change_altitude(int(event.text))
+
+        manager.process_events(event)
 
     screen.blit(scene.surface, (0, 0))
     for aircraft in aircrafts:
@@ -150,6 +193,8 @@ while running:
         screen.blit(aircraft.surf, scene.cood_to_pixel((aircraft.y, aircraft.x)))
     
     sweep += 1
-        
-    pygame.display.flip()
+    
+    manager.update(elapsed / 1000)
+    manager.draw_ui(screen)
+    pygame.display.update()
     elapsed = clock.tick(frame_rate)
