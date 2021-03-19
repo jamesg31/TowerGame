@@ -42,8 +42,6 @@ def distance(origin, destination):
 screen_width = 1200
 screen_height = 600
 frame_rate = 30
-asdex_px_per_nm = screen_height / distance((airport_data["asdex_top"], 0), (airport_data["asdex_bottom"], 0))
-radar_px_per_nm = screen_height / distance((airport_data["top"], 0), (airport_data["bottom"], 0))
 scene = True
 debug = False
 
@@ -56,6 +54,7 @@ class Aircraft(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.name = name
         self.surf = pygame.Surface((750, 15), pygame.SRCALPHA)
+        # Draw dot to the left of text
         pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
         self.font = pygame.font.Font("font.ttf", 15)
         self.textSurf = self.font.render(name, 1, (86, 176, 91))
@@ -116,12 +115,13 @@ while running:
                     aircraft.label()
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
-            if scene:
-                print((x / asdex.scale) + airport_data["asdex_left"])
-                print(((y / asdex.scale) - airport_data["asdex_top"]) * -1)
-            else:
-                print((x / radar.scale) + airport_data["left"])
-                print(((y / radar.scale) - airport_data["top"]) * -1)
+            if debug:
+                if scene:
+                    print((x / asdex.scale) + airport_data["asdex_left"])
+                    print(((y / asdex.scale) - airport_data["asdex_top"]) * -1)
+                else:
+                    print((x / radar.scale) + airport_data["left"])
+                    print(((y / radar.scale) - airport_data["top"]) * -1)
 
     if not scene:
         screen.blit(radar.surface, (0, 0))
