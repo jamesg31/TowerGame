@@ -146,13 +146,23 @@ while running:
                     print(((y / radar.scale) - airport_data["top"]) * -1)
 
         if event.type == pygame.VIDEORESIZE:
-            w, h = pygame.display.get_surface().get_size()
-            scene.surface.fill(pygame.Color(0, 0, 0, 0))
-            scene.surface.set_alpha(255)
-            screen = pygame.display.set_mode(
-                event.dict['size'], pygame.RESIZABLE)
-            asdex.__init__(airport_data, h, w)
-            radar.__init__(airport_data, h, w)
+            # Scale existing surfaces to new surfaces
+            new_asdex = pygame.transform.scale(
+                asdex.surface, screen.get_rect().size)
+            new_radar = pygame.transform.scale(
+                radar.surface, screen.get_rect().size)
+
+            # Blank existing surfaces
+            asdex.surface.fill(pygame.Color(0, 0, 0, 255))
+            asdex.surface.set_alpha(255)
+            radar.surface.fill(pygame.Color(0, 0, 0, 255))
+            radar.surface.set_alpha(255)
+
+            # Set original surfaces to new scaled version
+            asdex.surface = new_asdex
+            radar.surface = new_radar
+
+            pygame.display.flip()
 
     screen.blit(scene.surface, (0, 0))
     for aircraft in aircrafts:
