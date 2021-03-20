@@ -17,4 +17,18 @@ Many editors and GUI git clients will help and even combine many of these comman
 
 ## License
 
-Refer to COPYING
+This program is distributed under the GDPLv3 licence.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+See [COPYING](https://github.com/jamesg31/TowerGame/blob/master/COPYING) for more details and the full licence.
+
+Copyright (c) 2021 James Gardner
