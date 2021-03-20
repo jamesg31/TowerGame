@@ -104,7 +104,7 @@ aircrafts = pygame.sprite.Group()
 aircrafts.add(Aircraft(
     (32.72426133333333, -117.212722), 250, 45, 'Plane1', 6000))
 aircrafts.add(Aircraft(
-    (32.73710425, -117.20420971), 18, 180, 'Plane2', 0))
+    (32.737167029999995, -117.20439805), 18, 180, 'Plane2', 0))
 elapsed = 1
 sweep = 0
 running = True
