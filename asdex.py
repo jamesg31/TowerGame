@@ -18,6 +18,7 @@ import pygame
 
 class Asdex:
     def __init__(self, data, screen_height, screen_width):
+        self.name = "asdex"
         self.data = data
         self.screen_height = screen_height
         self.screen_width = screen_width

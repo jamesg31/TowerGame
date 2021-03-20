@@ -42,7 +42,6 @@ def distance(origin, destination):
 screen_width = 1200
 screen_height = 600
 frame_rate = 30
-scene = True
 debug = False
 
 pygame.init()
@@ -53,11 +52,12 @@ class Aircraft(pygame.sprite.Sprite):
     def __init__(self, loc, speed, heading, name, altitude):
         pygame.sprite.Sprite.__init__(self)
         self.name = name
+        self.color = (86, 176, 91)
         self.surf = pygame.Surface((750, 15), pygame.SRCALPHA)
         # Draw dot to the left of text
-        pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
+        pygame.draw.rect(self.surf, self.color, (0, 7.5, 5, 5))
         self.font = pygame.font.Font("font.ttf", 15)
-        self.textSurf = self.font.render(name, 1, (86, 176, 91))
+        self.textSurf = self.font.render(name, 1, self.color)
         # self.surf.blit(self.textSurf, (9, 0))
         self.rect=self.surf.get_rect()
         self.y, self.x = loc
@@ -86,11 +86,18 @@ class Aircraft(pygame.sprite.Sprite):
         displaySize = tuple(n + 5 for n in self.font.size(displayText))
 
         # Clear and redraw the text surface
-        self.textSurf = self.font.render(str(displayText), 1, (86, 176, 91))
+        self.textSurf = self.font.render(str(displayText), 1, self.color)
         self.surf = pygame.Surface(displaySize, pygame.SRCALPHA)
-        pygame.draw.rect(self.surf, (86, 176, 91), (0, 7.5, 5, 5))
+        pygame.draw.rect(self.surf, self.color, (0, 7.5, 5, 5))
         self.surf.blit(self.textSurf, (9, 0))
 
+        # Moves the rect to the new location of the text, used for collisions
+        self.rect.update(scene.cood_to_pixel((self.y, self.x)), displaySize)
+
+    def on_click(self):
+        self.color = (174, 179, 36)
+        self.label()
+        
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
 aircrafts = pygame.sprite.Group()
@@ -101,13 +108,17 @@ aircrafts.add(Aircraft(
 elapsed = 1
 sweep = 0
 running = True
+scene = asdex
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                scene = not scene
+                if scene.name == "asdex":
+                    scene = radar
+                else:
+                    scene = asdex
             # F1 to toggle "debug mode"
             if event.key == pygame.K_F1:
                 debug = not debug
@@ -115,27 +126,28 @@ while running:
                     aircraft.label()
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
+            print(x)
+            print(y)
+            # Detect aircraft clicks
+            for aircraft in aircrafts:
+                if aircraft.rect.collidepoint(x, y):
+                    print("collide")
+                    aircraft.on_click()
+
+            # If in debug mode, print cood of screen click
             if debug:
-                if scene:
+                if scene.name == "asdex":
                     print((x / asdex.scale) + airport_data["asdex_left"])
                     print(((y / asdex.scale) - airport_data["asdex_top"]) * -1)
                 else:
                     print((x / radar.scale) + airport_data["left"])
                     print(((y / radar.scale) - airport_data["top"]) * -1)
 
-    if not scene:
-        screen.blit(radar.surface, (0, 0))
-        for aircraft in aircrafts:
-            if sweep % 60 == 0:
-                aircraft.update(elapsed, scene)
-            screen.blit(aircraft.surf, radar.cood_to_pixel((aircraft.y, aircraft.x)))
-
-    else:
-        screen.blit(asdex.surface, (0, 0))
-        for aircraft in aircrafts:
-            if sweep % 60 == 0:
-                aircraft.update(elapsed, scene)
-            screen.blit(aircraft.surf, asdex.cood_to_pixel((aircraft.y, aircraft.x)))
+    screen.blit(scene.surface, (0, 0))
+    for aircraft in aircrafts:
+        if sweep % 60 == 0:
+            aircraft.update(elapsed, scene)
+        screen.blit(aircraft.surf, scene.cood_to_pixel((aircraft.y, aircraft.x)))
     
     sweep += 1
         
