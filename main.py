@@ -21,6 +21,7 @@ import json
 from math import sin, cos, sqrt, atan2, radians
 from asdex import Asdex
 from radar import Radar
+from gui import Gui
 
 with open('airport.hjson') as f:
   airport_data = hjson.loads(f.read())
@@ -51,15 +52,6 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height))
 manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
 
-altitude_dropdown = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(
-    relative_rect=pygame.Rect((30, screen_height - 80), (100, 50)),
-    starting_option='',
-    options_list=['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000'],
-    manager=manager,
-    visible=False)
-
-gui_elements = [altitude_dropdown]
-
 class Aircraft(pygame.sprite.Sprite):
     def __init__(self, loc, speed, heading, name, altitude):
         pygame.sprite.Sprite.__init__(self)
@@ -76,6 +68,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.heading = heading
         self.speed = speed
         self.altitude = altitude
+        self.gui = Gui(screen_height, screen_width, manager)
 
     def update(self, elapsed, scene):
         # Calculate speed in km / second, then multiply by seconds since last update
@@ -153,23 +146,24 @@ while running:
                     for aircraft in aircrafts:
                         aircraft.label()
 
-                    altitude_dropdown.selected_option = str(selected.altitude)
-                    altitude_dropdown.show()
-                
-            # Check if click is inside a gui element
-            for gui_element in gui_elements:
-                if gui_element.hover_point(x, y) or gui_element.is_focused:
-                    collide = True
+                    selected.gui.selected_option = str(selected.altitude)
+                    selected.gui.show()
+            
+            # Check if there is a selected aircraft
+            if selected != None:
+                # Check if click is inside a gui element
+                for element in selected.gui.elements:
+                    if element.hover_point(x, y) or element.is_focused:
+                        collide = True
 
             # If no collision, unselect aircraft
             if not collide:
-                selected = None
+                if selected != None:
+                    selected.gui.hide()
+                    selected = None
                 for aircraft in aircrafts:
                     aircraft.label()
-                
-                show_gui = False
-                altitude_dropdown.hide()
-  
+                  
             # If in debug mode, print cood of screen click
             if debug:
                 if scene.name == "asdex":
@@ -181,7 +175,7 @@ while running:
 
         if event.type == pygame.USEREVENT:
             if event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
-                if event.ui_element == altitude_dropdown:
+                if event.ui_element == selected.gui.altitude:
                     selected.change_altitude(int(event.text))
 
         manager.process_events(event)
