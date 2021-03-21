@@ -26,22 +26,39 @@ class Radar:
 
         # Scale for the smaller ratio, based on airport data
         self.vert_scale = abs(
-            self.screen_height /
-            (self.data["top"] - self.data["bottom"]))
+            self.screen_height / (self.data["top"] - self.data["bottom"])
+        )
+
         self.hor_scale = abs(
-            self.screen_width /
-            (self.data["left"] - self.data["right"]))
+            self.screen_width / (self.data["left"] - self.data["right"])
+        )
+
         self.scale = min(self.vert_scale, self.hor_scale)
         self.surface = pygame.Surface((self.screen_width, self.screen_height))
         self.render()
 
     def render(self):
         self.surface.fill((0, 0, 0))
-        self.runway_start = self.cood_to_pixel((self.data["runway"]["start_lat"], self.data["runway"]["start_long"]))
-        self.runway_end = self.cood_to_pixel((self.data["runway"]["end_lat"], self.data["runway"]["end_long"]))
-        pygame.draw.line(self.surface, (255, 255, 255), self.runway_start, self.runway_end, width=3)
+
+        self.runway_start = self.cood_to_pixel(
+            (self.data["runway"]["start_lat"], self.data["runway"]["start_long"])
+        )
+
+        self.runway_end = self.cood_to_pixel(
+            (self.data["runway"]["end_lat"], self.data["runway"]["end_long"])
+        )
+
+        pygame.draw.line(
+            self.surface, (255, 255, 255), self.runway_start, self.runway_end, width=3
+        )
+
         for line in self.data["lines"]:
-            pygame.draw.line(self.surface, (255, 255, 255), self.cood_to_pixel((line["start_lat"], line["start_long"])), self.cood_to_pixel((line["end_lat"], line["end_long"])))
+            pygame.draw.line(
+                self.surface,
+                (255, 255, 255),
+                self.cood_to_pixel((line["start_lat"], line["start_long"])),
+                self.cood_to_pixel((line["end_lat"], line["end_long"])),
+            )
 
     def cood_to_pixel(self, location):
         lat, lon = location
