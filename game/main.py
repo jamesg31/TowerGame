@@ -19,8 +19,8 @@ import pygame_gui
 import hjson
 import json
 from math import sin, cos, sqrt, atan2, radians
-from lib import Asdex
-from lib import Radar
+from lib.scenes import Asdex
+from lib.scenes import Radar
 from lib import Gui
 
 with open("res/airport.hjson") as f:
@@ -94,7 +94,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.surf.blit(self.textSurf, (9, 0))
 
         # Moves the rect to the new location of the text, used for collisions
-        self.rect.update(scene.cood_to_pixel((self.y, self.x)), displaySize)
+        self.rect.update(scene.coord_to_pixel((self.y, self.x)), displaySize)
 
     def change_altitude(self, altitude):
         self.altitude = altitude
@@ -194,7 +194,7 @@ while running:
     for aircraft in aircrafts:
         if sweep % 60 == 0:
             aircraft.update(elapsed, scene)
-        screen.blit(aircraft.surf, scene.cood_to_pixel((aircraft.y, aircraft.x)))
+        screen.blit(aircraft.surf, scene.coord_to_pixel((aircraft.y, aircraft.x)))
 
     sweep += 1
 
