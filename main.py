@@ -180,6 +180,9 @@ while running:
             if event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
                 if event.ui_element == selected.gui.altitude:
                     selected.change_altitude(int(event.text))
+                    for aircraft in aircrafts:
+                        aircraft.label()
+                    selected.gui.hide()
 
         manager.process_events(event)
 
