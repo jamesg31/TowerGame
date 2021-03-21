@@ -26,33 +26,39 @@ class Asdex:
 
         # Scale for the smaller ratio, based on airport data
         self.vert_scale = abs(
-            self.screen_height /
-            (self.data["asdex_top"] - self.data["asdex_bottom"]))
+            self.screen_height / (self.data["asdex_top"] - self.data["asdex_bottom"])
+        )
         self.hor_scale = abs(
-            self.screen_width /
-            (self.data["asdex_left"] - self.data["asdex_right"]))
+            self.screen_width / (self.data["asdex_left"] - self.data["asdex_right"])
+        )
+
         self.scale = min(self.vert_scale, self.hor_scale)
         self.surface = pygame.Surface((self.screen_width, self.screen_height))
         self.render()
 
     def render(self):
         self.surface.fill((0, 97, 122))
+
         for shape in self.data["shapes"]:
             new_shape = []
+
             for coord in shape["points"]:
                 new_shape.append(self.cood_to_pixel(coord))
+
             if shape["type"] == "RWAY":
                 color = (29, 29, 28)
             elif shape["type"] == "BLDG":
                 color = (76, 76, 76)
             else:
                 color = (57, 57, 57)
+
             pygame.draw.polygon(self.surface, color, new_shape)
 
     def cood_to_pixel(self, location):
         lat, lon = location
         x = (lon - self.data["asdex_left"]) * self.scale
         y = (self.data["asdex_top"] - lat) * self.scale
+
         return x, y
 
     def handle_event(self, event):
