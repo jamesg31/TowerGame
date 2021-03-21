@@ -51,12 +51,5 @@ class Asdex(Scene):
 
             pygame.draw.polygon(self.surface, color, new_shape)
 
-    def coord_to_pixel(self, location):
-        lat, lon = location
-        x = (lon - self.data["asdex_left"]) * self.scale
-        y = (self.data["asdex_top"] - lat) * self.scale
-
-        return x, y
-
     def handle_event(self, event):
         pass
