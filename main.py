@@ -71,7 +71,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.heading = heading
         self.speed = speed
         self.altitude = altitude
-        self.gui = Gui(screen_height, screen_width, manager)
+        self.gui = Gui(screen_height, screen_width, self.altitude, manager)
 
     def update(self, elapsed, scene):
         # Calculate speed in km / second, then multiply by seconds since last update

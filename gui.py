@@ -18,10 +18,10 @@ import pygame
 import pygame_gui
 
 class Gui:
-    def __init__(self, screen_height, screen_width, manager):
+    def __init__(self, screen_height, screen_width, cur_alt, manager):
         self.altitude = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(
             relative_rect=pygame.Rect((30, screen_height - 80), (100, 50)),
-            starting_option='',
+            starting_option=str(cur_alt),
             options_list=['1000', '2000', '3000', '4000', '5000', '6000', '7000', '8000'],
             manager=manager,
             visible=False)
