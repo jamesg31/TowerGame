@@ -18,10 +18,10 @@ import pygame
 import hjson
 import json
 from math import sin, cos, sqrt, atan2, radians
-from asdex import Asdex
-from radar import Radar
+from lib import Asdex
+from lib import Radar
 
-with open("airport.hjson") as f:
+with open("res/airport.hjson") as f:
     airport_data = hjson.loads(f.read())
 
 
@@ -44,7 +44,7 @@ class Aircraft(pygame.sprite.Sprite):
 
         # Draw dot to the left of text
         pygame.draw.rect(self.surf, self.color, (0, 7.5, 5, 5))
-        self.font = pygame.font.Font("font.ttf", 15)
+        self.font = pygame.font.Font("res/font.ttf", 15)
         self.textSurf = self.font.render(name, 1, self.color)
 
         # self.surf.blit(self.textSurf, (9, 0))
