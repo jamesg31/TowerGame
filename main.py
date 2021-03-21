@@ -49,8 +49,11 @@ debug = False
 pygame.init()
 clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode((screen_width, screen_height))
+screen = pygame.display.set_mode(
+    (screen_width, screen_height),
+    pygame.RESIZABLE)
 manager = pygame_gui.UIManager((screen_width, screen_height), 'theme.json')
+
 
 class Aircraft(pygame.sprite.Sprite):
     def __init__(self, loc, speed, heading, name, altitude):
@@ -113,7 +116,7 @@ aircrafts = pygame.sprite.Group()
 aircrafts.add(Aircraft(
     (32.72426133333333, -117.212722), 250, 45, 'Plane1', 6000))
 aircrafts.add(Aircraft(
-    (32.73710425, -117.20420971), 18, 180, 'Plane2', 0))
+    (32.737167029999995, -117.20439805), 18, 180, 'Plane2', 0))
 elapsed = 1
 sweep = 0
 running = True
@@ -179,6 +182,18 @@ while running:
                     selected.change_altitude(int(event.text))
 
         manager.process_events(event)
+
+        if event.type == pygame.VIDEORESIZE:
+            # Get new size
+            w, h = pygame.display.get_surface().get_size()
+
+            # Hide current scene
+            scene.surface.fill(pygame.Color(0, 0, 0, 0))
+            scene.surface.set_alpha(255)
+
+            # Recreate all scenes with new size
+            asdex.__init__(airport_data, h, w)
+            radar.__init__(airport_data, h, w)
 
     screen.blit(scene.surface, (0, 0))
     for aircraft in aircrafts:
