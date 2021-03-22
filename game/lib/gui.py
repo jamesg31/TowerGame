@@ -44,3 +44,21 @@ class Gui:
 
     def hide(self):
         self.altitude.hide()
+
+
+class AircraftSpawner:
+    def __init__(self):
+        pass
+
+    def button(self, pos_x, pos_y, size_x, size_y, text, manager):
+        self.button = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((pos_x, pos_y), (size_x, size_y)),
+            text=text,
+            manager=manager,
+            visible=0)
+
+    def show(self):
+        self.button.show()
+
+    def hide(self):
+        self.button.hide()

@@ -21,7 +21,7 @@ import json
 from math import sin, cos, sqrt, atan2, radians
 from lib.scenes import Asdex
 from lib.scenes import Radar
-from lib import Gui
+from lib import Gui, AircraftSpawner
 
 with open("res/airport.hjson") as f:
     airport_data = hjson.loads(f.read())
@@ -107,6 +107,9 @@ aircrafts = pygame.sprite.Group()
 aircrafts.add(Aircraft((32.72426133333333, -117.212722), 250, 45, "Plane1", 6000))
 aircrafts.add(Aircraft((32.737167029999995, -117.20439805), 18, 180, "Plane2", 0))
 
+aircraft_spawner = AircraftSpawner()
+aircraft_spawner_button = aircraft_spawner.button(50, 50, 250, 50, 'Hello', manager)
+
 elapsed = 1
 sweep = 0
 scene = asdex
@@ -125,9 +128,13 @@ while running:
 
             # F1 to toggle "debug mode"
             if event.key == pygame.K_F1:
+                aircraft_spawner.hide()
                 debug = not debug
                 for aircraft in aircrafts:
                     aircraft.label()
+            # F2 to spawn aircraft while in debug mode
+            if event.key == pygame.K_F2 and debug:
+                aircraft_spawner.show()
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
             collide = False
@@ -174,6 +181,10 @@ while running:
                     for aircraft in aircrafts:
                         aircraft.label()
                     selected.gui.hide()
+            if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == aircraft_spawner.button:
+                    print('Hello World!')
+                    aircraft_spawner.hide()
 
         manager.process_events(event)
 
