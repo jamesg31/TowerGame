@@ -32,6 +32,6 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
-See [COPYING](https://github.com/jamesg31/TowerGame/blob/master/COPYING) for more details and the full license.
+See [COPYING](https://github.com/jamesg31/TowerGame/blob/master/COPYING.md) for more details and the full license.
 
 _Copyright (c) 2021 James Gardner_
