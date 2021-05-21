@@ -99,7 +99,7 @@ class Aircraft(pygame.sprite.Sprite):
 
         # Moves the rect to the new location of the text, used for collisions
         self.rect.update(
-            scene.cood_to_pixel((self.y, self.x)), (displaySize[0], displaySize[1] * 2)
+            scene.coord_to_pixel((self.y, self.x)), (displaySize[0], displaySize[1] * 2)
         )
 
     def change_altitude(self, altitude):
