@@ -15,36 +15,32 @@
 # along with this software. If not, see <https://www.gnu.org/licenses/>.
 
 import pygame
+from . import Scene
 
 
-class Radar:
+class Radar(Scene):
     def __init__(self, data, screen_height, screen_width):
-        self.name = "radar"
-        self.data = data
-        self.screen_height = screen_height
-        self.screen_width = screen_width
-
-        # Scale for the smaller ratio, based on airport data
-        self.vert_scale = abs(
-            self.screen_height / (self.data["top"] - self.data["bottom"])
+        super().__init__(
+            "radar",
+            data,
+            screen_height,
+            screen_width,
+            {
+                "top": data["top"],
+                "bottom": data["bottom"],
+                "left": data["left"],
+                "right": data["right"],
+            },
         )
-
-        self.hor_scale = abs(
-            self.screen_width / (self.data["left"] - self.data["right"])
-        )
-
-        self.scale = min(self.vert_scale, self.hor_scale)
-        self.surface = pygame.Surface((self.screen_width, self.screen_height))
-        self.render()
 
     def render(self):
         self.surface.fill((0, 0, 0))
 
-        self.runway_start = self.cood_to_pixel(
+        self.runway_start = self.coord_to_pixel(
             (self.data["runway"]["start_lat"], self.data["runway"]["start_long"])
         )
 
-        self.runway_end = self.cood_to_pixel(
+        self.runway_end = self.coord_to_pixel(
             (self.data["runway"]["end_lat"], self.data["runway"]["end_long"])
         )
 
@@ -56,15 +52,6 @@ class Radar:
             pygame.draw.line(
                 self.surface,
                 (255, 255, 255),
-                self.cood_to_pixel((line["start_lat"], line["start_long"])),
-                self.cood_to_pixel((line["end_lat"], line["end_long"])),
+                self.coord_to_pixel((line["start_lat"], line["start_long"])),
+                self.coord_to_pixel((line["end_lat"], line["end_long"])),
             )
-
-    def cood_to_pixel(self, location):
-        lat, lon = location
-        x = (lon - self.data["left"]) * self.scale
-        y = (self.data["top"] - lat) * self.scale
-        return x, y
-
-    def handle_event(self, event):
-        pass
