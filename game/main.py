@@ -40,7 +40,7 @@ manager = pygame_gui.UIManager((screen_width, screen_height), "res/theme.json")
 
 
 class Aircraft(pygame.sprite.Sprite):
-    def __init__(self, loc, speed, heading, name, altitude):
+    def __init__(self, loc, speed, heading, altitude, name, aircraft_type):
         pygame.sprite.Sprite.__init__(self)
         self.name = name
         self.color = (86, 176, 91)
@@ -58,6 +58,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.speed = speed
         self.altitude = altitude
         self.gui = Gui(screen_height, screen_width, self.altitude, manager)
+        self.aircraft_type = aircraft_type
 
     def update(self, elapsed, scene):
         # Calculate speed in km / second, then multiply by seconds since last update
@@ -78,23 +79,28 @@ class Aircraft(pygame.sprite.Sprite):
         aircraft.textSurf.set_alpha(255)
 
         # Determine display text and size
-        if debug:
-            displayText = f"{self.name} | {self.altitude}     "
-        else:
-            displayText = f"{self.name}     "
-
+        displayText1 = f"{self.name} "
+        displayText2 = f"{self.aircraft_type} {self.speed} "
         # Determine the x, y size of displayText according to pygame
         # Then add 5 because it's slightly too small (shrug)
-        displaySize = tuple(n + 5 for n in self.font.size(displayText))
+        displaySize = tuple(n + 5 for n in self.font.size(displayText1))
 
         # Clear and redraw the text surface
-        self.textSurf = self.font.render(str(displayText), 1, self.color)
-        self.surf = pygame.Surface(displaySize, pygame.SRCALPHA)
-        pygame.draw.rect(self.surf, self.color, (0, 7.5, 5, 5))
-        self.surf.blit(self.textSurf, (9, 0))
+        self.textSurf1 = self.font.render(str(displayText1), 1, self.color)
+        self.textSurf2 = self.font.render(str(displayText2), 1, self.color)
+        self.surf = pygame.Surface(
+            (displaySize[0], displaySize[1] * 2), pygame.SRCALPHA
+        )
+        pygame.draw.rect(
+            self.surf, self.color, (0, ((displaySize[1] * 2 - 10) / 2) - 2.5, 5, 5)
+        )
+        self.surf.blit(self.textSurf1, (9, 0))
+        self.surf.blit(self.textSurf2, (9, displaySize[1] - 5))
 
         # Moves the rect to the new location of the text, used for collisions
-        self.rect.update(scene.coord_to_pixel((self.y, self.x)), displaySize)
+        self.rect.update(
+            scene.cood_to_pixel((self.y, self.x)), (displaySize[0], displaySize[1] * 2)
+        )
 
     def change_altitude(self, altitude):
         self.altitude = altitude
@@ -104,9 +110,12 @@ asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
 
 aircrafts = pygame.sprite.Group()
-aircrafts.add(Aircraft((32.72426133333333, -117.212722), 250, 45, "Plane1", 6000))
-aircrafts.add(Aircraft((32.737167029999995, -117.20439805), 18, 180, "Plane2", 0))
-
+aircrafts.add(
+    Aircraft((32.72426133333333, -117.212722), 250, 45, 6000, "UAL1208", "B738")
+)
+aircrafts.add(
+    Aircraft((32.737167029999995, -117.20439805), 18, 180, 0, "N172SP", "C172")
+)
 elapsed = 1
 sweep = 0
 scene = asdex
