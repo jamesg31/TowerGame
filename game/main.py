@@ -59,6 +59,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.altitude = altitude
         self.gui = Gui(screen_height, screen_width, self.altitude, manager)
         self.aircraft_type = aircraft_type
+        self.offset = 0
 
     def update(self, elapsed, scene):
         # Calculate speed in km / second, then multiply by seconds since last update
@@ -101,6 +102,10 @@ class Aircraft(pygame.sprite.Sprite):
         self.rect.update(
             scene.coord_to_pixel((self.y, self.x)), (displaySize[0], displaySize[1] * 2)
         )
+
+        # Creates offset to move the aircraft up when rendering
+        # with size of text so small square is at actual position instead of top left corner
+        self.offset = (displaySize[1] * 2 - 10) / 2
 
     def change_altitude(self, altitude):
         self.altitude = altitude
@@ -203,7 +208,8 @@ while running:
     for aircraft in aircrafts:
         if sweep % 60 == 0:
             aircraft.update(elapsed, scene)
-        screen.blit(aircraft.surf, scene.coord_to_pixel((aircraft.y, aircraft.x)))
+        x, y = scene.coord_to_pixel((aircraft.y, aircraft.x))
+        screen.blit(aircraft.surf, (x, y - aircraft.offset))
 
     sweep += 1
 
