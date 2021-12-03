@@ -17,7 +17,7 @@
 import pygame
 import pygame_gui
 import hjson
-import json
+import time
 from math import sin, cos, sqrt, atan2, radians
 from lib.scenes import Asdex
 from lib.scenes import Radar
@@ -45,6 +45,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.name = name
         self.color = (86, 176, 91)
         self.surf = pygame.Surface((750, 15), pygame.SRCALPHA)
+        self.last_update = time.time()
 
         # Draw dot to the left of text
         pygame.draw.rect(self.surf, self.color, (0, 7.5, 5, 5))
@@ -64,11 +65,14 @@ class Aircraft(pygame.sprite.Sprite):
 
     def update(self, elapsed, scene):
         # Calculate speed in km / second, then multiply by seconds since last update
-        self.h = (self.speed / 3600 * (elapsed / 1000)) * 60
+        self.h = ((self.speed * 1.852) / 3600) * (time.time() - self.last_update)
+        self.last_update = time.time()
 
         # Calculate difference to lat and lon using km to cood conversions
         self.y += cos(radians(self.heading)) * (self.h / 110.574)
-        self.x += sin(radians(self.heading)) * (self.h / (111.320 * cos(self.y)))
+        self.x += sin(radians(self.heading)) * (
+            self.h / (111.320 * cos(radians(self.y)))
+        )
         self.label()
 
     def label(self):
