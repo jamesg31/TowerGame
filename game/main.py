@@ -66,6 +66,22 @@ class Aircraft(pygame.sprite.Sprite):
         self.offset = 0
 
     def update(self, elapsed, scene):
+        # Does aircraft need to climb or descend?
+        if self.target_altitude != self.altitude:
+            # Calculate rate at which aircraft should climb or descend
+            alt_change = (aircraft_data[self.aircraft_type]["vspeed"] / 60) * (
+                time.time() - self.last_update
+            )
+
+            # Is the aircraft above, below, or close to the target alt
+            if self.target_altitude + alt_change <= self.altitude:
+                self.altitude -= alt_change
+            elif self.target_altitude - alt_change >= self.altitude:
+                self.altitude += alt_change
+            # Aircraft is within the alt_change of the target altitude
+            else:
+                self.altitude = self.target_altitude
+
         # Calculate speed in km / second, then multiply by seconds since last update
         self.h = ((self.speed * 1.852) / 3600) * (time.time() - self.last_update)
         self.last_update = time.time()
