@@ -47,3 +47,6 @@ class Scene:
     # Must be overridden by subclass
     def render(self):
         raise NotImplementedError()
+
+    def label(self):
+        raise NotImplementedError()
