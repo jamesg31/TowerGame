@@ -60,3 +60,43 @@ class Asdex(Scene):
 
     def handle_event(self, event):
         pass
+
+    def label(self, aircraft, selected, label_sweep):
+        # Change color if aircraft is selected
+        if selected == aircraft:
+            aircraft.color = (174, 179, 36)
+        else:
+            aircraft.color = (86, 176, 91)
+        aircraft.textSurf.fill(pygame.Color(0, 0, 0, 0))
+        aircraft.textSurf.set_alpha(255)
+
+        # Determine display text and size
+        displayText1 = f"{aircraft.name} "
+        displayText2 = f"{aircraft.aircraft_type} {aircraft.speed} "
+        # Determine the x, y size of displayText according to pygame
+        # Then add 5 because it's slightly too small (shrug)
+        displaySize = tuple(n + 5 for n in aircraft.font.size(displayText1))
+
+        # Clear and redraw the text surface
+        aircraft.textSurf1 = aircraft.font.render(str(displayText1), 1, aircraft.color)
+        aircraft.textSurf2 = aircraft.font.render(str(displayText2), 1, aircraft.color)
+        aircraft.surf = pygame.Surface(
+            (displaySize[0], displaySize[1] * 2), pygame.SRCALPHA
+        )
+        pygame.draw.rect(
+            aircraft.surf,
+            aircraft.color,
+            (0, ((displaySize[1] * 2 - 10) / 2) - 2.5, 5, 5),
+        )
+        aircraft.surf.blit(aircraft.textSurf1, (9, 0))
+        aircraft.surf.blit(aircraft.textSurf2, (9, displaySize[1] - 5))
+
+        # Moves the rect to the new location of the text, used for collisions
+        aircraft.rect.update(
+            self.coord_to_pixel((aircraft.y, aircraft.x)),
+            (displaySize[0], displaySize[1] * 2),
+        )
+
+        # Creates offset to move the aircraft up when rendering
+        # with size of text so small square is at actual position instead of top left corner
+        aircraft.offset = (displaySize[1] * 2 - 10) / 2

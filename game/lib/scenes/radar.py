@@ -55,3 +55,66 @@ class Radar(Scene):
                 self.coord_to_pixel((line["start_lat"], line["start_long"])),
                 self.coord_to_pixel((line["end_lat"], line["end_long"])),
             )
+
+    def label(self, aircraft, selected, label_sweep):
+        # Change color if aircraft is selected
+        if selected == aircraft:
+            aircraft.color = (174, 179, 36)
+        else:
+            aircraft.color = (86, 176, 91)
+        aircraft.textSurf.fill(pygame.Color(0, 0, 0, 0))
+        aircraft.textSurf.set_alpha(255)
+
+        # Convert altitudes to three didget standard
+        if aircraft.altitude < 1000:
+            altitude = "00" + str(aircraft.altitude)[0]
+        elif aircraft.altitude >= 1000 and aircraft.altitude < 10000:
+            altitude = "0" + str(aircraft.altitude)[0:2]
+        else:
+            altitude = str(aircraft.altitude)[0:3]
+
+        if aircraft.target_altitude < 1000:
+            target_altitude = "00" + str(aircraft.target_altitude)[0]
+        elif aircraft.target_altitude >= 1000 and aircraft.altitude < 10000:
+            target_altitude = "0" + str(aircraft.target_altitude)[0:2]
+        else:
+            target_altitude = str(aircraft.target_altitude)[0:3]
+
+        # Determine display text and size
+        displayText1 = f"{aircraft.name} "
+        displayText2 = f"{altitude} {aircraft.speed}  "
+        displayText3 = f"{target_altitude} {aircraft.aircraft_type} "
+        # Determine the x, y size of displayText according to pygame
+        # Then add 5 because it's slightly too small (shrug)
+        displaySize = tuple(n + 5 for n in aircraft.font.size(displayText1))
+
+        # Clear and redraw the text surface
+        aircraft.textSurf1 = aircraft.font.render(str(displayText1), 1, aircraft.color)
+        if label_sweep:
+            aircraft.textSurf2 = aircraft.font.render(
+                str(displayText2), 1, aircraft.color
+            )
+        else:
+            aircraft.textSurf2 = aircraft.font.render(
+                str(displayText3), 1, aircraft.color
+            )
+        aircraft.surf = pygame.Surface(
+            (displaySize[0], displaySize[1] * 2), pygame.SRCALPHA
+        )
+        pygame.draw.rect(
+            aircraft.surf,
+            aircraft.color,
+            (0, ((displaySize[1] * 2 - 10) / 2) - 2.5, 5, 5),
+        )
+        aircraft.surf.blit(aircraft.textSurf1, (9, 0))
+        aircraft.surf.blit(aircraft.textSurf2, (9, displaySize[1] - 5))
+
+        # Moves the rect to the new location of the text, used for collisions
+        aircraft.rect.update(
+            self.coord_to_pixel((aircraft.y, aircraft.x)),
+            (displaySize[0], displaySize[1] * 2),
+        )
+
+        # Creates offset to move the aircraft up when rendering
+        # with size of text so small square is at actual position instead of top left corner
+        aircraft.offset = (displaySize[1] * 2 - 10) / 2

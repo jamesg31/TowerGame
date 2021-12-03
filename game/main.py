@@ -57,7 +57,8 @@ class Aircraft(pygame.sprite.Sprite):
         self.heading = heading
         self.speed = speed
         self.altitude = altitude
-        self.gui = Gui(screen_height, screen_width, self.altitude, manager)
+        self.target_altitude = altitude
+        self.gui = Gui(screen_height, screen_width, self.target_altitude, manager)
         self.aircraft_type = aircraft_type
         self.offset = 0
 
@@ -71,44 +72,10 @@ class Aircraft(pygame.sprite.Sprite):
         self.label()
 
     def label(self):
-        # Change color if aircraft is selected
-        if selected == self:
-            self.color = (174, 179, 36)
-        else:
-            self.color = (86, 176, 91)
-        aircraft.textSurf.fill(pygame.Color(0, 0, 0, 0))
-        aircraft.textSurf.set_alpha(255)
-
-        # Determine display text and size
-        displayText1 = f"{self.name} "
-        displayText2 = f"{self.aircraft_type} {self.speed} "
-        # Determine the x, y size of displayText according to pygame
-        # Then add 5 because it's slightly too small (shrug)
-        displaySize = tuple(n + 5 for n in self.font.size(displayText1))
-
-        # Clear and redraw the text surface
-        self.textSurf1 = self.font.render(str(displayText1), 1, self.color)
-        self.textSurf2 = self.font.render(str(displayText2), 1, self.color)
-        self.surf = pygame.Surface(
-            (displaySize[0], displaySize[1] * 2), pygame.SRCALPHA
-        )
-        pygame.draw.rect(
-            self.surf, self.color, (0, ((displaySize[1] * 2 - 10) / 2) - 2.5, 5, 5)
-        )
-        self.surf.blit(self.textSurf1, (9, 0))
-        self.surf.blit(self.textSurf2, (9, displaySize[1] - 5))
-
-        # Moves the rect to the new location of the text, used for collisions
-        self.rect.update(
-            scene.coord_to_pixel((self.y, self.x)), (displaySize[0], displaySize[1] * 2)
-        )
-
-        # Creates offset to move the aircraft up when rendering
-        # with size of text so small square is at actual position instead of top left corner
-        self.offset = (displaySize[1] * 2 - 10) / 2
+        scene.label(self, selected, label_sweep)
 
     def change_altitude(self, altitude):
-        self.altitude = altitude
+        self.target_altitude = altitude
 
 
 asdex = Asdex(airport_data, screen_height, screen_width)
@@ -123,6 +90,7 @@ aircrafts.add(
 )
 elapsed = 1
 sweep = 0
+label_sweep = True
 scene = asdex
 running = True
 selected = None
@@ -150,11 +118,12 @@ while running:
                 if aircraft.rect.collidepoint(x, y):
                     collide = True
                     selected = aircraft
+                    print(selected.name)
                     # Update all aircraft colors
                     for aircraft in aircrafts:
                         aircraft.label()
 
-                    selected.gui.selected_option = str(selected.altitude)
+                    selected.gui.selected_option = str(selected.target_altitude)
                     selected.gui.show()
 
             # Check if there is a selected aircraft
@@ -169,6 +138,7 @@ while running:
                 if selected != None:
                     selected.gui.hide()
                     selected = None
+                    print("None")
                 for aircraft in aircrafts:
                     aircraft.label()
 
@@ -205,13 +175,17 @@ while running:
 
     screen.blit(scene.surface, (0, 0))
 
-    for aircraft in aircrafts:
-        if sweep % 60 == 0:
+    if sweep == 60:
+        label_sweep = not label_sweep
+        for aircraft in aircrafts:
             aircraft.update(elapsed, scene)
-        x, y = scene.coord_to_pixel((aircraft.y, aircraft.x))
-        screen.blit(aircraft.surf, (x, y - aircraft.offset))
+        sweep = 0
 
     sweep += 1
+
+    for aircraft in aircrafts:
+        x, y = scene.coord_to_pixel((aircraft.y, aircraft.x))
+        screen.blit(aircraft.surf, (x, y - aircraft.offset))
 
     manager.update(elapsed / 1000)
     manager.draw_ui(screen)
