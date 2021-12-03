@@ -26,6 +26,8 @@ from lib import Gui
 with open("res/airport.hjson") as f:
     airport_data = hjson.loads(f.read())
 
+with open("res/aircraft.hjson") as f:
+    aircraft_data = hjson.loads(f.read())
 
 screen_width = 1200
 screen_height = 600
