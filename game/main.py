@@ -139,8 +139,9 @@ while running:
             for aircraft in aircrafts:
                 if aircraft.rect.collidepoint(x, y):
                     collide = True
+                    if selected != None:
+                        selected.gui.hide()
                     selected = aircraft
-                    print(selected.name)
                     # Update all aircraft colors
                     for aircraft in aircrafts:
                         aircraft.label()
@@ -160,7 +161,6 @@ while running:
                 if selected != None:
                     selected.gui.hide()
                     selected = None
-                    print("None")
                 for aircraft in aircrafts:
                     aircraft.label()
 
