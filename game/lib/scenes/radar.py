@@ -38,45 +38,9 @@ class Radar(Scene):
     def render(self):
         self.surface.fill((0, 0, 0))
 
-        self.runway_start = self.coord_to_pixel(
-            (self.data["runway"]["start_lat"], self.data["runway"]["start_long"])
-        )
-
-        self.runway_end = self.coord_to_pixel(
-            (self.data["runway"]["end_lat"], self.data["runway"]["end_long"])
-        )
-
         pygame.draw.line(
             self.surface, (255, 255, 255), self.runway_start, self.runway_end, width=3
         )
-
-        # calculate angle of runway, use angle to calculate other sections of pattern
-        ydif = (self.runway_start[1] - self.runway_end[1]) / 2
-        xdif = (self.runway_start[0] - self.runway_end[0]) / 2
-
-        final = (self.runway_start[0] + xdif, self.runway_start[1] + ydif)
-        upwind = (self.runway_end[0] - xdif, self.runway_end[1] - ydif)
-
-        rbase = (final[0] + ydif / 1, final[1] - xdif / 1)
-        lbase = (final[0] - ydif / 1, final[1] + xdif / 1)
-
-        rdownwind = (upwind[0] + ydif / 1, upwind[1] - xdif / 1)
-        ldownwind = (upwind[0] - ydif / 1, upwind[1] + xdif / 1)
-
-        extended_final = (
-            self.runway_start[0] + (xdif * 3),
-            self.runway_start[1] + (ydif * 3),
-        )
-
-        # render traffic pattern
-        draw_line_dashed(self.surface, (86, 176, 91), self.runway_start, extended_final)
-        draw_line_dashed(self.surface, (86, 176, 91), self.runway_end, upwind)
-        draw_line_dashed(self.surface, (86, 176, 91), final, rbase)
-        draw_line_dashed(self.surface, (86, 176, 91), final, lbase)
-        draw_line_dashed(self.surface, (86, 176, 91), upwind, rdownwind)
-        draw_line_dashed(self.surface, (86, 176, 91), upwind, ldownwind)
-        draw_line_dashed(self.surface, (86, 176, 91), rdownwind, rbase)
-        draw_line_dashed(self.surface, (86, 176, 91), ldownwind, lbase)
 
         for line in self.data["lines"]:
             pygame.draw.line(
@@ -85,6 +49,18 @@ class Radar(Scene):
                 self.coord_to_pixel((line["start_lat"], line["start_long"])),
                 self.coord_to_pixel((line["end_lat"], line["end_long"])),
             )
+
+        # render traffic pattern
+        draw_line_dashed(
+            self.surface, (86, 176, 91), self.runway_start, self.extended_final
+        )
+        draw_line_dashed(self.surface, (86, 176, 91), self.runway_end, self.upwind)
+        draw_line_dashed(self.surface, (86, 176, 91), self.final, self.rbase)
+        draw_line_dashed(self.surface, (86, 176, 91), self.final, self.lbase)
+        draw_line_dashed(self.surface, (86, 176, 91), self.upwind, self.rdownwind)
+        draw_line_dashed(self.surface, (86, 176, 91), self.upwind, self.ldownwind)
+        draw_line_dashed(self.surface, (86, 176, 91), self.rdownwind, self.rbase)
+        draw_line_dashed(self.surface, (86, 176, 91), self.ldownwind, self.lbase)
 
     def label(self, aircraft, selected, label_sweep):
         # Change color if aircraft is selected

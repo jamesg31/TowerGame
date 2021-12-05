@@ -18,9 +18,10 @@ import pygame
 import pygame_gui
 import hjson
 import time
-from math import sin, cos, sqrt, atan2, radians
+from math import sin, cos, atan, radians, degrees
 from lib.scenes import Asdex
 from lib.scenes import Radar
+from lib.scenes import Scene
 from lib import Gui
 
 with open("res/airport.hjson") as f:
@@ -42,7 +43,7 @@ manager = pygame_gui.UIManager((screen_width, screen_height), "res/theme.json")
 
 
 class Aircraft(pygame.sprite.Sprite):
-    def __init__(self, loc, speed, heading, altitude, name, aircraft_type):
+    def __init__(self, loc, speed, heading, destination, altitude, name, aircraft_type):
         pygame.sprite.Sprite.__init__(self)
         self.name = name
         self.color = (86, 176, 91)
@@ -60,6 +61,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.heading = heading
         self.speed = speed
         self.altitude = altitude
+        self.destination = destination
         self.target_altitude = altitude
         self.gui = Gui(screen_height, screen_width, self.target_altitude, manager)
         self.aircraft_type = aircraft_type
@@ -86,6 +88,12 @@ class Aircraft(pygame.sprite.Sprite):
         self.h = ((self.speed * 1.852) / 3600) * (time.time() - self.last_update)
         self.last_update = time.time()
 
+        if self.destination != None:
+            location = radar.coord_to_pixel((self.y, self.x))
+            ydif = self.destination[0] - location[0]
+            xdif = self.destination[1] - location[1]
+            self.heading = 360 - degrees(atan(ydif / xdif))
+
         # Calculate difference to lat and lon using km to cood conversions
         self.y += cos(radians(self.heading)) * (self.h / 110.574)
         self.x += sin(radians(self.heading)) * (
@@ -102,18 +110,29 @@ class Aircraft(pygame.sprite.Sprite):
 
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
+scene = asdex
 
 aircrafts = pygame.sprite.Group()
 aircrafts.add(
-    Aircraft((32.72426133333333, -117.212722), 250, 45, 6000, "UAL1208", "B738")
+    Aircraft((32.72426133333333, -117.212722), 250, 45, None, 6000, "UAL1208", "B738")
 )
 aircrafts.add(
-    Aircraft((32.737167029999995, -117.20439805), 18, 180, 0, "N172SP", "C172")
+    Aircraft((32.737167029999995, -117.20439805), 18, 180, None, 0, "N172SP", "C172")
+)
+aircrafts.add(
+    Aircraft(
+        (airport_data["runway"]["start_lat"], airport_data["runway"]["start_long"]),
+        300,
+        None,
+        radar.upwind,
+        0,
+        "N2203G",
+        "C172",
+    )
 )
 elapsed = 1
 sweep = 0
 label_sweep = True
-scene = asdex
 running = True
 selected = None
 while running:

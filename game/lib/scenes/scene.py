@@ -36,6 +36,32 @@ class Scene:
 
         self.scale = min(self.vert_scale, self.hor_scale)
         self.surface = pygame.Surface((self.screen_width, self.screen_height))
+
+        self.runway_start = self.coord_to_pixel(
+            (self.data["runway"]["start_lat"], self.data["runway"]["start_long"])
+        )
+
+        self.runway_end = self.coord_to_pixel(
+            (self.data["runway"]["end_lat"], self.data["runway"]["end_long"])
+        )
+
+        ydif = (self.runway_start[1] - self.runway_end[1]) / 2
+        xdif = (self.runway_start[0] - self.runway_end[0]) / 2
+
+        self.final = (self.runway_start[0] + xdif, self.runway_start[1] + ydif)
+        self.upwind = (self.runway_end[0] - xdif, self.runway_end[1] - ydif)
+
+        self.rbase = (self.final[0] + ydif / 1, self.final[1] - xdif / 1)
+        self.lbase = (self.final[0] - ydif / 1, self.final[1] + xdif / 1)
+
+        self.rdownwind = (self.upwind[0] + ydif / 1, self.upwind[1] - xdif / 1)
+        self.ldownwind = (self.upwind[0] - ydif / 1, self.upwind[1] + xdif / 1)
+
+        self.extended_final = (
+            self.runway_start[0] + (xdif * 3),
+            self.runway_start[1] + (ydif * 3),
+        )
+
         self.render()
 
     def coord_to_pixel(self, location):
@@ -43,6 +69,12 @@ class Scene:
         x = (lon - self.region["left"]) * self.scale
         y = (self.region["top"] - lat) * self.scale
         return x, y
+
+    def pixel_to_coord(self, location):
+        x, y = location
+        lon = (x / self.scale) + self.region["left"]
+        lat = ((y / self.scale) - self.region["top"]) * -1
+        return lat, lon
 
     # Must be overridden by subclass
     def render(self):
