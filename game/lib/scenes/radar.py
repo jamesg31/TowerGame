@@ -15,7 +15,9 @@
 # along with this software. If not, see <https://www.gnu.org/licenses/>.
 
 import pygame
+from pygame import draw
 from . import Scene
+from ..tools import draw_line_dashed
 
 
 class Radar(Scene):
@@ -47,6 +49,33 @@ class Radar(Scene):
         pygame.draw.line(
             self.surface, (255, 255, 255), self.runway_start, self.runway_end, width=3
         )
+
+        ydif = (self.runway_start[1] - self.runway_end[1]) / 2
+        xdif = (self.runway_start[0] - self.runway_end[0]) / 2
+        ratio = ydif / xdif
+
+        final = (self.runway_start[0] + xdif, self.runway_start[1] + ydif)
+        upwind = (self.runway_end[0] - xdif, self.runway_end[1] - ydif)
+
+        rbase = (final[0] + ydif / 1, final[1] - xdif / 1)
+        lbase = (final[0] - ydif / 1, final[1] + xdif / 1)
+
+        rdownwind = (upwind[0] + ydif / 1, upwind[1] - xdif / 1)
+        ldownwind = (upwind[0] - ydif / 1, upwind[1] + xdif / 1)
+
+        extended_final = (
+            self.runway_start[0] + (xdif * 3),
+            self.runway_start[1] + (ydif * 3),
+        )
+
+        draw_line_dashed(self.surface, (86, 176, 91), self.runway_start, extended_final)
+        draw_line_dashed(self.surface, (86, 176, 91), self.runway_end, upwind)
+        draw_line_dashed(self.surface, (86, 176, 91), final, rbase)
+        draw_line_dashed(self.surface, (86, 176, 91), final, lbase)
+        draw_line_dashed(self.surface, (86, 176, 91), upwind, rdownwind)
+        draw_line_dashed(self.surface, (86, 176, 91), upwind, ldownwind)
+        draw_line_dashed(self.surface, (86, 176, 91), rdownwind, rbase)
+        draw_line_dashed(self.surface, (86, 176, 91), ldownwind, lbase)
 
         for line in self.data["lines"]:
             pygame.draw.line(
