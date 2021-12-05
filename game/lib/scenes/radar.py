@@ -50,9 +50,9 @@ class Radar(Scene):
             self.surface, (255, 255, 255), self.runway_start, self.runway_end, width=3
         )
 
+        # calculate angle of runway, use angle to calculate other sections of pattern
         ydif = (self.runway_start[1] - self.runway_end[1]) / 2
         xdif = (self.runway_start[0] - self.runway_end[0]) / 2
-        ratio = ydif / xdif
 
         final = (self.runway_start[0] + xdif, self.runway_start[1] + ydif)
         upwind = (self.runway_end[0] - xdif, self.runway_end[1] - ydif)
@@ -68,6 +68,7 @@ class Radar(Scene):
             self.runway_start[1] + (ydif * 3),
         )
 
+        # render traffic pattern
         draw_line_dashed(self.surface, (86, 176, 91), self.runway_start, extended_final)
         draw_line_dashed(self.surface, (86, 176, 91), self.runway_end, upwind)
         draw_line_dashed(self.surface, (86, 176, 91), final, rbase)
