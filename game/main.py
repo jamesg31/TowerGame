@@ -18,10 +18,10 @@ import pygame
 import pygame_gui
 import hjson
 import time
-from math import sin, cos, atan, radians, degrees
+from math import sin, cos, atan, radians, degrees, sqrt
+import numpy as np
 from lib.scenes import Asdex
 from lib.scenes import Radar
-from lib.scenes import Scene
 from lib import Gui
 
 with open("res/airport.hjson") as f:
@@ -32,7 +32,7 @@ with open("res/aircraft.hjson") as f:
 
 screen_width = 1200
 screen_height = 600
-frame_rate = 30
+frame_rate = 240
 debug = False
 
 pygame.init()
@@ -43,7 +43,7 @@ manager = pygame_gui.UIManager((screen_width, screen_height), "res/theme.json")
 
 
 class Aircraft(pygame.sprite.Sprite):
-    def __init__(self, loc, speed, heading, destination, altitude, name, aircraft_type):
+    def __init__(self, loc, speed, heading, path, altitude, name, aircraft_type):
         pygame.sprite.Sprite.__init__(self)
         self.name = name
         self.color = (86, 176, 91)
@@ -61,7 +61,8 @@ class Aircraft(pygame.sprite.Sprite):
         self.heading = heading
         self.speed = speed
         self.altitude = altitude
-        self.destination = destination
+        self.path = path
+        self.stage = 0
         self.target_altitude = altitude
         self.gui = Gui(screen_height, screen_width, self.target_altitude, manager)
         self.aircraft_type = aircraft_type
@@ -88,11 +89,18 @@ class Aircraft(pygame.sprite.Sprite):
         self.h = ((self.speed * 1.852) / 3600) * (time.time() - self.last_update)
         self.last_update = time.time()
 
-        if self.destination != None:
+        if self.path != None:
             location = radar.coord_to_pixel((self.y, self.x))
-            ydif = self.destination[0] - location[0]
-            xdif = self.destination[1] - location[1]
-            self.heading = 360 - degrees(atan(ydif / xdif))
+            ydif = self.path[self.stage][0] - location[0]
+            xdif = self.path[self.stage][1] - location[1]
+            if xdif > 0:
+                self.heading = 180 - degrees(atan(ydif / xdif))
+            elif xdif < 0:
+                self.heading = 360 - degrees(atan(ydif / xdif))
+            print("heading: " + str(self.heading))
+            print("tan: " + str(degrees(atan(ydif / xdif))))
+            print("ydif: " + str(ydif))
+            print("xdif: " + str(xdif))
 
         # Calculate difference to lat and lon using km to cood conversions
         self.y += cos(radians(self.heading)) * (self.h / 110.574)
@@ -111,6 +119,8 @@ class Aircraft(pygame.sprite.Sprite):
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
 scene = asdex
+rpattern = [radar.upwind, radar.rdownwind, radar.rbase, radar.final]
+lpattern = [radar.upwind, radar.ldownwind, radar.lbase, radar.final]
 
 aircrafts = pygame.sprite.Group()
 aircrafts.add(
@@ -122,9 +132,9 @@ aircrafts.add(
 aircrafts.add(
     Aircraft(
         (airport_data["runway"]["start_lat"], airport_data["runway"]["start_long"]),
-        300,
+        180,
         None,
-        radar.upwind,
+        lpattern,
         0,
         "N2203G",
         "C172",
@@ -220,6 +230,15 @@ while running:
         label_sweep = not label_sweep
         for aircraft in aircrafts:
             aircraft.update(elapsed, scene)
+            if aircraft.path != None:
+                x, y = radar.coord_to_pixel((aircraft.y, aircraft.x))
+                distance = sqrt(
+                    (x - aircraft.path[aircraft.stage][0]) ** 2
+                    + (y - aircraft.path[aircraft.stage][1]) ** 2
+                )
+                if distance < 10:
+                    aircraft.stage += 1
+
         sweep = 0
 
     sweep += 1

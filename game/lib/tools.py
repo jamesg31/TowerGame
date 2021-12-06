@@ -1,4 +1,4 @@
-import pygame as pg
+import pygame
 import numpy as np
 
 
@@ -22,7 +22,7 @@ def draw_line_dashed(
     ).transpose()
 
     return [
-        pg.draw.line(
+        pygame.draw.line(
             surface, color, tuple(dash_knots[n]), tuple(dash_knots[n + 1]), width
         )
         for n in range(int(exclude_corners), dash_amount - int(exclude_corners), 2)
