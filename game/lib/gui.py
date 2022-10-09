@@ -20,8 +20,14 @@ import pygame_gui
 
 class Gui:
     def __init__(self, screen_height, screen_width, cur_alt, manager):
-        self.altitude = pygame_gui.elements.ui_drop_down_menu.UIDropDownMenu(
-            relative_rect=pygame.Rect((30, screen_height - 80), (100, 50)),
+        self.container_rect = pygame.Rect((30, screen_height - 200), (100, 170))
+        self.container = pygame_gui.core.UIContainer(
+            relative_rect=self.container_rect,
+            manager=manager
+        )
+        self.altitude = pygame_gui.elements.UIDropDownMenu(
+            relative_rect=pygame.Rect((0, 120), (100, 50)),
+            container=self.container,
             starting_option=str(cur_alt),
             options_list=[
                 "1000",
@@ -44,3 +50,10 @@ class Gui:
 
     def hide(self):
         self.altitude.hide()
+
+    def resize(self, screen_height, screen_width):
+        #self.altitude_rect = pygame.Rect((30, screen_height - 80), (100, 50))
+        #self.altitude.set_relative_position((30, screen_height - 80))
+        #self.altitude.rebuild()
+        self.container.set_position((30, screen_height - 80))
+        self.container.update_containing_rect_position()

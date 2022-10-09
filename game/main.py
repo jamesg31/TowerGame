@@ -32,7 +32,7 @@ with open("res/aircraft.hjson") as f:
 
 screen_width = 1200
 screen_height = 600
-frame_rate = 240
+frame_rate = 30
 debug = False
 
 pygame.init()
@@ -68,7 +68,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.aircraft_type = aircraft_type
         self.offset = 0
 
-    def update(self, elapsed, scene):
+    def update(self, elapsed, scene, debug):
         # Does aircraft need to climb or descend?
         if self.target_altitude != self.altitude:
             # Calculate rate at which aircraft should climb or descend
@@ -208,9 +208,7 @@ while running:
                     selected.change_altitude(int(event.text))
                     for aircraft in aircrafts:
                         aircraft.label()
-                    selected.gui.hide()
-
-        manager.process_events(event)
+                    #selected.gui.hide()
 
         if event.type == pygame.VIDEORESIZE:
             # Get new size
@@ -223,6 +221,13 @@ while running:
             # Recreate all scenes with new size
             asdex.__init__(airport_data, h, w)
             radar.__init__(airport_data, h, w)
+
+            # Inform GUIs of new screen size
+            manager.set_window_resolution((w, h))
+            for aircraft in aircrafts:
+                aircraft.gui.resize(h, w)
+
+        manager.process_events(event)
 
     screen.blit(scene.surface, (0, 0))
 

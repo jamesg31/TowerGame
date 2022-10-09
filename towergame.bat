@@ -1,2 +1,2 @@
 @echo off
-python game\main.py
+python3 game\main.py
