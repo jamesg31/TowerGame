@@ -68,7 +68,7 @@ class Aircraft(pygame.sprite.Sprite):
         self.aircraft_type = aircraft_type
         self.offset = 0
 
-    def update(self, elapsed, scene, debug):
+    def update(self, elapsed, scene, debug):      
         # Does aircraft need to climb or descend?
         if self.target_altitude != self.altitude:
             # Calculate rate at which aircraft should climb or descend
@@ -97,10 +97,13 @@ class Aircraft(pygame.sprite.Sprite):
                 self.heading = 180 - degrees(atan(ydif / xdif))
             elif xdif < 0:
                 self.heading = 360 - degrees(atan(ydif / xdif))
-            print("heading: " + str(self.heading))
-            print("tan: " + str(degrees(atan(ydif / xdif))))
-            print("ydif: " + str(ydif))
-            print("xdif: " + str(xdif))
+            if debug:
+                print("heading: " + str(self.heading))
+                print("tan: " + str(degrees(atan(ydif / xdif))))
+                print("ydif: " + str(ydif))
+                print("xdif: " + str(xdif))
+                print ("tl: " + str(self.rect.topleft))
+                print ("br: " + str(self.rect.bottomright))
 
         # Calculate difference to lat and lon using km to cood conversions
         self.y += cos(radians(self.heading)) * (self.h / 110.574)
@@ -234,7 +237,7 @@ while running:
     if sweep == 60:
         label_sweep = not label_sweep
         for aircraft in aircrafts:
-            aircraft.update(elapsed, scene)
+            aircraft.update(elapsed, scene, debug)
             if aircraft.path != None:
                 x, y = radar.coord_to_pixel((aircraft.y, aircraft.x))
                 distance = sqrt(

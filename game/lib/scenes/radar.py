@@ -115,12 +115,13 @@ class Radar(Scene):
         aircraft.surf.blit(aircraft.textSurf1, (9, 0))
         aircraft.surf.blit(aircraft.textSurf2, (9, displaySize[1] - 5))
 
-        # Moves the rect to the new location of the text, used for collisions
-        aircraft.rect.update(
-            self.coord_to_pixel((aircraft.y, aircraft.x)),
-            (displaySize[0], displaySize[1] * 2),
-        )
-
         # Creates offset to move the aircraft up when rendering
         # with size of text so small square is at actual position instead of top left corner
         aircraft.offset = (displaySize[1] * 2 - 10) / 2
+
+        x, y = self.coord_to_pixel((aircraft.y, aircraft.x))
+        # Moves the rect to the new location of the text, used for collisions
+        aircraft.rect.update(
+            (x, y-aircraft.offset),
+            (displaySize[0], (displaySize[1] - 5) * 2)
+        )
