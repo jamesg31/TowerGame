@@ -23,6 +23,7 @@ import numpy as np
 from lib.scenes import Asdex
 from lib.scenes import Radar
 from lib import Gui
+from lib.tools import calculate_bearing, calculate_distance
 
 with open("res/airport.hjson") as f:
     airport_data = hjson.loads(f.read())
@@ -33,6 +34,7 @@ with open("res/aircraft.hjson") as f:
 screen_width = 1200
 screen_height = 600
 frame_rate = 30
+sweep_sec = 2
 debug = False
 
 pygame.init()
@@ -43,7 +45,7 @@ manager = pygame_gui.UIManager((screen_width, screen_height), "res/theme.json")
 
 
 class Aircraft(pygame.sprite.Sprite):
-    def __init__(self, loc, speed, heading, path, altitude, name, aircraft_type):
+    def __init__(self, loc, speed, heading, pattern, arrival, altitude, name, aircraft_type):
         pygame.sprite.Sprite.__init__(self)
         self.name = name
         self.color = (86, 176, 91)
@@ -55,15 +57,25 @@ class Aircraft(pygame.sprite.Sprite):
         self.font = pygame.font.Font("res/font.ttf", 15)
         self.textSurf = self.font.render(name, 1, self.color)
 
-        # self.surf.blit(self.textSurf, (9, 0))
+        # Handle arrivals initiation
+        self.arrival = arrival
+        if self.arrival != None:
+            self.altitude = self.arrival[0][1]
+            self.y, self.x = self.arrival[0][0]
+            self.leg_destination = self.arrival[1][0]
+            self.heading = calculate_bearing(self.arrival[0][0], self.leg_destination)
+            print(self.heading)
+        else:
+            self.altitude = altitude
+            self.y, self.x = loc
+            self.heading=heading
+            self.leg_destination = None
+
         self.rect = self.surf.get_rect()
-        self.y, self.x = loc
-        self.heading = heading
         self.speed = speed
-        self.altitude = altitude
-        self.path = path
-        self.stage = 0
-        self.target_altitude = altitude
+        self.pattern = pattern
+        self.leg = 0
+        self.target_altitude = self.altitude
         self.gui = Gui(screen_height, screen_width, self.target_altitude, manager)
         self.aircraft_type = aircraft_type
         self.offset = 0
@@ -89,10 +101,10 @@ class Aircraft(pygame.sprite.Sprite):
         self.h = ((self.speed * 1.852) / 3600) * (time.time() - self.last_update)
         self.last_update = time.time()
 
-        if self.path != None:
+        if self.pattern != None:
             location = radar.coord_to_pixel((self.y, self.x))
-            ydif = self.path[self.stage][0] - location[0]
-            xdif = self.path[self.stage][1] - location[1]
+            ydif = self.pattern[self.leg][0] - location[0]
+            xdif = self.pattern[self.leg][1] - location[1]
             if xdif > 0:
                 self.heading = 180 - degrees(atan(ydif / xdif))
             elif xdif < 0:
@@ -104,6 +116,32 @@ class Aircraft(pygame.sprite.Sprite):
                 print("xdif: " + str(xdif))
                 print ("tl: " + str(self.rect.topleft))
                 print ("br: " + str(self.rect.bottomright))
+
+        elif self.arrival != None:
+            # check if at the end of the leg
+                # if at end, turn, recalculate vs and turn
+                # if last leg, turn to runway
+                # if runway, land
+            # Calculate distance traveled per sweep
+            km_per_sweep = ((self.speed * 1.852) / 3600) * sweep_sec
+            print(km_per_sweep)
+            print(calculate_distance([self.y, self.x], self.leg_destination))
+            if calculate_distance([self.y, self.x], self.leg_destination) < km_per_sweep:
+                # Check if final leg completed
+                if len(self.arrival) == self.leg + 2:
+                    self.leg_destination = [airport_data["runway"]["start_lat"], airport_data["runway"]["start_long"]]
+                # Check if at runway
+                # elif len(self.arrival) > self.leg:
+                    # at runway, initiate landing
+                else:
+                    # Set location to exact waypoint (helps with accuracy on next leg)
+                    self.y, self.x = self.leg_destination
+                    self.leg += 1
+
+                    self.leg_destination = self.arrival[self.leg + 1][0]
+
+                # Calculate new heading
+                self.heading = calculate_bearing([self.y, self.x], self.leg_destination)
 
         # Calculate difference to lat and lon using km to cood conversions
         self.y += cos(radians(self.heading)) * (self.h / 110.574)
@@ -118,6 +156,13 @@ class Aircraft(pygame.sprite.Sprite):
     def change_altitude(self, altitude):
         self.target_altitude = altitude
 
+    def show_route(self):
+        if self.arrival != None:
+            radar.show_arrival(self.arrival)
+
+    def hide_route(self):
+        radar.hide_arrival()
+
 
 asdex = Asdex(airport_data, screen_height, screen_width)
 radar = Radar(airport_data, screen_height, screen_width)
@@ -127,20 +172,33 @@ lpattern = [radar.upwind, radar.ldownwind, radar.lbase, radar.final]
 
 aircrafts = pygame.sprite.Group()
 aircrafts.add(
-    Aircraft((32.72426133333333, -117.212722), 250, 45, None, 6000, "UAL1208", "B738")
+    Aircraft((32.72426133333333, -117.212722), 250, 0, None, None, 6000, "UAL1208", "B738")
 )
 aircrafts.add(
-    Aircraft((32.737167029999995, -117.20439805), 18, 180, None, 0, "N172SP", "C172")
+    Aircraft((32.737167029999995, -117.20439805), 18, 180, None, None, 0, "N172SP", "C172")
 )
 aircrafts.add(
     Aircraft(
         (airport_data["runway"]["start_lat"], airport_data["runway"]["start_long"]),
+        90,
         180,
-        None,
         lpattern,
+        None,
         0,
         "N2203G",
         "C172",
+    )
+)
+aircrafts.add(
+    Aircraft(
+        None,
+        1000,
+        None,
+        None,
+        airport_data["arrivals"]["one"],
+        None,
+        "AAL220",
+        "B738"
     )
 )
 elapsed = 1
@@ -173,6 +231,7 @@ while running:
                     collide = True
                     if selected != None:
                         selected.gui.hide()
+                        selected.hide_route()
                     selected = aircraft
                     # Update all aircraft colors
                     for aircraft in aircrafts:
@@ -180,6 +239,7 @@ while running:
 
                     selected.gui.selected_option = str(selected.target_altitude)
                     selected.gui.show()
+                    selected.show_route()
 
             # Check if there is a selected aircraft
             if selected != None:
@@ -192,6 +252,7 @@ while running:
             if not collide:
                 if selected != None:
                     selected.gui.hide()
+                    selected.hide_route()
                     selected = None
                 for aircraft in aircrafts:
                     aircraft.label()
@@ -234,18 +295,18 @@ while running:
 
     screen.blit(scene.surface, (0, 0))
 
-    if sweep == 60:
+    if sweep == sweep_sec * frame_rate:
         label_sweep = not label_sweep
         for aircraft in aircrafts:
             aircraft.update(elapsed, scene, debug)
-            if aircraft.path != None:
+            if aircraft.pattern != None:
                 x, y = radar.coord_to_pixel((aircraft.y, aircraft.x))
                 distance = sqrt(
-                    (x - aircraft.path[aircraft.stage][0]) ** 2
-                    + (y - aircraft.path[aircraft.stage][1]) ** 2
+                    (x - aircraft.pattern[aircraft.leg][0]) ** 2
+                    + (y - aircraft.pattern[aircraft.leg][1]) ** 2
                 )
                 if distance < 10:
-                    aircraft.stage += 1
+                    aircraft.leg += 1
 
         sweep = 0
 

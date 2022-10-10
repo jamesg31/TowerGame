@@ -16,7 +16,6 @@
 
 import pygame
 
-
 class Scene:
     def __init__(self, name, data, screen_height, screen_width, region):
         self.name = name

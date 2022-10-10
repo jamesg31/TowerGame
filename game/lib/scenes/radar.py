@@ -19,7 +19,6 @@ from pygame import draw
 from . import Scene
 from ..tools import draw_line_dashed
 
-
 class Radar(Scene):
     def __init__(self, data, screen_height, screen_width):
         super().__init__(
@@ -125,3 +124,16 @@ class Radar(Scene):
             (x, y-aircraft.offset),
             (displaySize[0], (displaySize[1] - 5) * 2)
         )
+
+    def show_arrival(self, arrival):
+        prev_point = None
+        for point in arrival:
+            if prev_point != None:
+                draw_line_dashed(self.surface, (255, 0, 0), self.coord_to_pixel(prev_point[0]), self.coord_to_pixel(point[0]))
+            prev_point = point
+
+        # Draw line from final waypoint to runway
+        draw_line_dashed(self.surface, (255, 0, 0), self.coord_to_pixel(prev_point[0]), self.coord_to_pixel([self.data["runway"]["start_lat"], self.data["runway"]["start_long"]]))
+
+    def hide_arrival(self):
+        self.render()

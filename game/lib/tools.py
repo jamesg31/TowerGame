@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+from math import sin, cos, atan2, pi, radians, sqrt
 
 
 def draw_line_dashed(
@@ -27,3 +28,24 @@ def draw_line_dashed(
         )
         for n in range(int(exclude_corners), dash_amount - int(exclude_corners), 2)
     ]
+
+def calculate_bearing(start, end):
+    y = sin(radians(end[1] - start[1])) * cos(radians(end[0]))
+    x = cos(radians(start[0])) * sin(radians(end[0])) - sin(radians(start[0])) * cos(radians(end[0])) * cos(radians(end[1] - start[1]))
+    theta = atan2(y, x)
+    return (theta * 180 / pi + 360) % 360
+
+def calculate_distance(start, end):
+    # Haversine formula
+    lat1 = radians(start[0])
+    lon1 = radians(start[1])
+    lat2 = radians(end[0])
+    lon2 = radians(end[1])
+
+    r = 6371
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1 
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a)) 
+    return r * c

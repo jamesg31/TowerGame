@@ -17,7 +17,6 @@
 import pygame
 from . import Scene
 
-
 class Asdex(Scene):
     def __init__(self, data, screen_height, screen_width):
         super().__init__(
