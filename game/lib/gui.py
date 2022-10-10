@@ -17,7 +17,6 @@
 import pygame
 import pygame_gui
 
-
 class Gui:
     def __init__(self, screen_height, screen_width, cur_alt, manager):
         self.container_rect = pygame.Rect((30, screen_height - 200), (100, 170))

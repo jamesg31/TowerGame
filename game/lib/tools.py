@@ -1,7 +1,22 @@
+# Copyright (c) 2021 James Gardner.
+# This file is part of TowerATC (https://github.com/jamesg31/TowerATC).
+#
+# This is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this software. If not, see <https://www.gnu.org/licenses/>.
+
 import pygame
 import numpy as np
 from math import sin, cos, atan2, pi, radians, sqrt
-
 
 def draw_line_dashed(
     surface, color, start_pos, end_pos, width=1, dash_length=10, exclude_corners=True
