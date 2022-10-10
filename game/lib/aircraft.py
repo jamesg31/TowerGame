@@ -36,31 +36,36 @@ class Aircraft(pygame.sprite.Sprite):
 
         # Handle arrivals initiation
         self.arrival = arrival
+        self.speed = speed
         if self.arrival != None:
             self.altitude = self.arrival[0][1]
+            self.target_altitude = self.arrival[1][1]
             self.y, self.x = self.arrival[0][0]
-            self.leg_destination = self.arrival[1][0]
-            self.heading = calculate_bearing(self.arrival[0][0], self.leg_destination)
-            print(self.heading)
+            self.leg_destination = self.arrival[1]
+            self.heading = calculate_bearing(self.arrival[0][0], self.leg_destination[0])
+            # Calculate initial descent rate
+            distance_to_destination = calculate_distance([self.y, self.x], self.leg_destination[0])
+            seconds_to_destination = (distance_to_destination / ((self.speed * 1.852) / 3600))
+            self.vpath = ((self.leg_destination[1] - self.altitude) / seconds_to_destination)
         else:
             self.altitude = altitude
+            self.target_altitude = self.altitude
             self.y, self.x = loc
             self.heading=heading
             self.leg_destination = None
+            self.vpath = None
 
         self.rect = self.surf.get_rect()
-        self.speed = speed
         self.pattern = pattern
         self.leg = 0
-        self.target_altitude = self.altitude
-        self.gui = Gui(screen_height, screen_width, self.target_altitude, manager)
+        self.gui = Gui(screen_height, screen_width, self.target_altitude, self.vpath, manager)
         self.aircraft_type = aircraft_type
         self.offset = 0
 
     def update(self, elapsed, scene, debug):
         from main import radar, airport_data, aircraft_data, sweep_sec      
         # Does aircraft need to climb or descend?
-        if self.target_altitude != self.altitude:
+        if self.target_altitude != self.altitude and self.vpath == None:
             # Calculate rate at which aircraft should climb or descend
             alt_change = (aircraft_data[self.aircraft_type]["vspeed"] / 60) * (
                 time.time() - self.last_update
@@ -74,6 +79,9 @@ class Aircraft(pygame.sprite.Sprite):
             # Aircraft is within the alt_change of the target altitude
             else:
                 self.altitude = self.target_altitude
+        
+        elif self.vpath != None:
+            self.altitude += (self.vpath * (time.time() - self.last_update))
 
         # Calculate speed in km / second, then multiply by seconds since last update
         self.h = ((self.speed * 1.852) / 3600) * (time.time() - self.last_update)
@@ -102,24 +110,35 @@ class Aircraft(pygame.sprite.Sprite):
                 # if runway, land
             # Calculate distance traveled per sweep
             km_per_sweep = ((self.speed * 1.852) / 3600) * sweep_sec
-            print(km_per_sweep)
-            print(calculate_distance([self.y, self.x], self.leg_destination))
-            if calculate_distance([self.y, self.x], self.leg_destination) < km_per_sweep:
+            distance_to_destination = calculate_distance([self.y, self.x], self.leg_destination[0])
+            # print(km_per_sweep)
+            # print(distance_to_destination)
+            if distance_to_destination < km_per_sweep:
                 # Check if final leg completed
                 if len(self.arrival) == self.leg + 2:
-                    self.leg_destination = [airport_data["runway"]["start_lat"], airport_data["runway"]["start_long"]]
+                    self.leg_destination = [[airport_data["runway"]["start_lat"], airport_data["runway"]["start_long"]], 0]
                 # Check if at runway
                 # elif len(self.arrival) > self.leg:
                     # at runway, initiate landing
                 else:
                     # Set location to exact waypoint (helps with accuracy on next leg)
-                    self.y, self.x = self.leg_destination
+                    self.y, self.x = self.leg_destination[0]
                     self.leg += 1
 
-                    self.leg_destination = self.arrival[self.leg + 1][0]
+                    self.leg_destination = self.arrival[self.leg + 1]
 
                 # Calculate new heading
-                self.heading = calculate_bearing([self.y, self.x], self.leg_destination)
+                self.heading = calculate_bearing([self.y, self.x], self.leg_destination[0])
+
+                if self.vpath != None:
+                    # Calculate new descent rate
+                    distance_to_destination = calculate_distance([self.y, self.x], self.leg_destination[0])
+                    seconds_to_destination = (distance_to_destination / ((self.speed * 1.852) / 3600))
+                    self.vpath = ((self.leg_destination[1] - self.altitude) / seconds_to_destination)
+
+                    # Set new target altitude
+                    self.target_altitude = self.leg_destination[1]
+                    self.gui.rebuild(self.target_altitude, self.vpath)
 
         # Calculate difference to lat and lon using km to cood conversions
         self.y += cos(radians(self.heading)) * (self.h / 110.574)
@@ -143,3 +162,10 @@ class Aircraft(pygame.sprite.Sprite):
     def hide_route(self):
         from main import radar
         radar.hide_arrival()
+
+    def enable_vpath(self):
+        self.target_altitude = self.leg_destination[1]
+        distance_to_destination = calculate_distance([self.y, self.x], self.leg_destination[0])
+        seconds_to_destination = (distance_to_destination / ((self.speed * 1.852) / 3600))
+        self.vpath = ((self.leg_destination[1] - self.altitude) / seconds_to_destination)
+        self.gui.rebuild(self.target_altitude, self.vpath)

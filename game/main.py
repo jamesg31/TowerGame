@@ -114,7 +114,7 @@ while running:
                         aircraft.label()
 
                     selected.gui.selected_option = str(selected.target_altitude)
-                    selected.gui.show()
+                    selected.gui.show(selected.vpath, selected.leg_destination)
                     selected.show_route()
 
             # Check if there is a selected aircraft
@@ -149,6 +149,13 @@ while running:
                     for aircraft in aircrafts:
                         aircraft.label()
                     #selected.gui.hide()
+            if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == selected.gui.vpath:
+                    if selected.vpath != None:
+                        selected.vpath = None
+                        selected.gui.rebuild(selected.target_altitude, selected.vpath)
+                    else:
+                        selected.enable_vpath()
 
         if event.type == pygame.VIDEORESIZE:
             # Get new size

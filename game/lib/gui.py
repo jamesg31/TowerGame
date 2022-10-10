@@ -14,20 +14,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this software. If not, see <https://www.gnu.org/licenses/>.
 
+from pydoc import visiblename
 import pygame
 import pygame_gui
 
 class Gui:
-    def __init__(self, screen_height, screen_width, cur_alt, manager):
-        self.container_rect = pygame.Rect((30, screen_height - 200), (100, 170))
+    def __init__(self, screen_height, screen_width, altitude, vpath, manager):
+        self.manager = manager
+        self.container_rect = pygame.Rect((30, screen_height - 200), (205, 170))
         self.container = pygame_gui.core.UIContainer(
             relative_rect=self.container_rect,
-            manager=manager
+            manager=manager,
+            visible=False
         )
+
         self.altitude = pygame_gui.elements.UIDropDownMenu(
             relative_rect=pygame.Rect((0, 120), (100, 50)),
             container=self.container,
-            starting_option=str(cur_alt),
+            starting_option=str(altitude),
             options_list=[
                 "1000",
                 "2000",
@@ -39,20 +43,65 @@ class Gui:
                 "8000",
             ],
             manager=manager,
-            visible=False,
+            visible=True,
         )
 
-        self.elements = [self.altitude]
+        self.vpath = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((105, 120), (50, 50)),
+            text="VP",
+            manager=manager,
+            container=self.container,
+            visible=True
+        )
 
-    def show(self):
-        self.altitude.show()
+        if vpath != None:
+            self.vpath.select()
+            self.altitude.disable()
+
+        self.elements = [self.altitude, self.vpath]
+
+    def show(self, vpath, leg_destination):
+        self.container.show()
+        if vpath != None:
+            self.vpath.select()
+            self.altitude.disable()
+        
+        if leg_destination != None:
+            self.vpath.enable()
+        else:
+            self.vpath.disable()
 
     def hide(self):
-        self.altitude.hide()
+        self.container.hide()
 
     def resize(self, screen_height, screen_width):
-        #self.altitude_rect = pygame.Rect((30, screen_height - 80), (100, 50))
-        #self.altitude.set_relative_position((30, screen_height - 80))
-        #self.altitude.rebuild()
         self.container.set_position((30, screen_height - 80))
         self.container.update_containing_rect_position()
+
+    def rebuild(self, altitude, vpath):
+        self.elements.remove(self.altitude)
+        self.altitude.kill()
+
+        self.altitude = pygame_gui.elements.UIDropDownMenu(
+            relative_rect=pygame.Rect((0, 120), (100, 50)),
+            container=self.container,
+            starting_option=str(altitude),
+            options_list=[
+                "1000",
+                "2000",
+                "3000",
+                "4000",
+                "5000",
+                "6000",
+                "7000",
+                "8000",
+            ],
+            manager=self.manager,
+            visible=True,
+        )
+
+        self.elements.append(self.altitude)
+
+        if vpath != None:
+            self.vpath.select()
+            self.altitude.disable()
