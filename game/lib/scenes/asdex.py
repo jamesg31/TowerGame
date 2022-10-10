@@ -82,6 +82,9 @@ class Asdex(Scene):
         aircraft.surf = pygame.Surface(
             (displaySize[0], displaySize[1] * 2), pygame.SRCALPHA
         )
+        aircraft.super_surf = pygame.Surface(
+            (displaySize[0], displaySize[1] * 2), pygame.SRCALPHA
+        )
         pygame.draw.rect(
             aircraft.surf,
             aircraft.color,
@@ -92,11 +95,16 @@ class Asdex(Scene):
 
         # Creates offset to move the aircraft up when rendering
         # with size of text so small square is at actual position instead of top left corner
-        aircraft.offset = (displaySize[1] * 2 - 10) / 2
+        aircraft.y_offset = (displaySize[1] * 2 - 10) / 2
+
+        aircraft.x_sup_offset = 0
+        aircraft.y_sup_offset = 0
 
         x, y = self.coord_to_pixel((aircraft.y, aircraft.x))
         # Moves the rect to the new location of the text, used for collisions
         aircraft.rect.update(
-            (x, y-aircraft.offset),
+            (x, y-aircraft.y_offset),
             (displaySize[0], (displaySize[1] - 5) * 2)
         )
+
+        aircraft.super_surf.blit(aircraft.surf, (0, 0))

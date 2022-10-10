@@ -22,15 +22,16 @@ from . import Gui
 
 class Aircraft(pygame.sprite.Sprite):
     def __init__(self, loc, speed, heading, pattern, arrival, altitude, name, aircraft_type):
-        from main import screen_height, screen_width, manager
+        from main import screen_height, screen_width, manager, scene, label_sweep, selected
         pygame.sprite.Sprite.__init__(self)
         self.name = name
         self.color = (86, 176, 91)
         self.surf = pygame.Surface((750, 15), pygame.SRCALPHA)
+        self.super_surf = pygame.Surface((750, 15), pygame.SRCALPHA)
         self.last_update = time.time()
 
         # Draw dot to the left of text
-        pygame.draw.rect(self.surf, self.color, (0, 7.5, 5, 5))
+        # pygame.draw.rect(self.surf, self.color, (0, 7.5, 5, 5))
         self.font = pygame.font.Font("res/font.ttf", 15)
         self.textSurf = self.font.render(name, 1, self.color)
 
@@ -60,10 +61,14 @@ class Aircraft(pygame.sprite.Sprite):
         self.leg = 0
         self.gui = Gui(screen_height, screen_width, self.target_altitude, self.vpath, manager)
         self.aircraft_type = aircraft_type
-        self.offset = 0
+        self.y_offset = 0
+        self.x_sup_offset = 0
+        self.y_sup_offset = 0
+
+        scene.label(self, selected, label_sweep)
 
     def update(self, elapsed, scene, debug):
-        from main import radar, airport_data, aircraft_data, sweep_sec      
+        from main import radar, airport_data, aircraft_data, sweep_sec, selected
         # Does aircraft need to climb or descend?
         if self.target_altitude != self.altitude and self.vpath == None:
             # Calculate rate at which aircraft should climb or descend

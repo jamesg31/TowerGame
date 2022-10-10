@@ -34,6 +34,12 @@ frame_rate = 30
 sweep_sec = 2
 debug = False
 
+elapsed = 1
+sweep = 0
+label_sweep = True
+running = True
+selected = None
+
 pygame.init()
 clock = pygame.time.Clock()
 
@@ -77,11 +83,6 @@ aircrafts.add(
         "B738"
     )
 )
-elapsed = 1
-sweep = 0
-label_sweep = True
-running = True
-selected = None
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -197,7 +198,7 @@ while running:
 
     for aircraft in aircrafts:
         x, y = scene.coord_to_pixel((aircraft.y, aircraft.x))
-        screen.blit(aircraft.surf, (x, y - aircraft.offset))
+        screen.blit(aircraft.super_surf, (x - aircraft.x_sup_offset, y - aircraft.y_offset - aircraft.y_sup_offset))
 
     manager.update(elapsed / 1000)
     manager.draw_ui(screen)

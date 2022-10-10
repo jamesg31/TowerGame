@@ -16,6 +16,7 @@
 
 import pygame
 from pygame import draw
+from math import cos, sin, degrees, radians
 from . import Scene
 from ..tools import draw_line_dashed
 
@@ -106,6 +107,9 @@ class Radar(Scene):
         aircraft.surf = pygame.Surface(
             (displaySize[0], displaySize[1] * 2), pygame.SRCALPHA
         )
+        aircraft.super_surf = pygame.Surface(
+            (displaySize[0] * 2, displaySize[0] * 2), pygame.SRCALPHA
+        )
         pygame.draw.rect(
             aircraft.surf,
             aircraft.color,
@@ -116,14 +120,33 @@ class Radar(Scene):
 
         # Creates offset to move the aircraft up when rendering
         # with size of text so small square is at actual position instead of top left corner
-        aircraft.offset = (displaySize[1] * 2 - 10) / 2
+        aircraft.y_offset = (displaySize[1] * 2 - 10) / 2
 
         x, y = self.coord_to_pixel((aircraft.y, aircraft.x))
         # Moves the rect to the new location of the text, used for collisions
         aircraft.rect.update(
-            (x, y-aircraft.offset),
+            (x, y-aircraft.y_offset),
             (displaySize[0], (displaySize[1] - 5) * 2)
         )
+        
+        # Create offset to correctly position super surf
+        aircraft.x_sup_offset = displaySize[0]
+        aircraft.y_sup_offset = ((displaySize[0] * 2) - displaySize[1] * 2) / 2
+
+        # If selected and not on an arrival, draw heading
+        if aircraft == selected and aircraft.arrival == None:
+            # Calculate line direction based off heading
+            x_heading = sin(radians(aircraft.heading)) * (aircraft.speed / (250 / displaySize[0]))
+            y_heading = cos(radians(aircraft.heading)) * (aircraft.speed / (250 / displaySize[0]))
+            # Draw line from center of super_surf (aircraft loc) to new point
+            pygame.draw.line(
+                aircraft.super_surf,
+                (255, 0, 0),
+                (displaySize[0] + 2.5, displaySize[0] - 5),
+                (displaySize[0] + x_heading + 2.5, displaySize[0] - y_heading - 5)
+            )
+
+        aircraft.super_surf.blit(aircraft.surf, (displaySize[0], ((displaySize[0] * 2) - displaySize[1] * 2) / 2))
 
     def show_arrival(self, arrival):
         prev_point = None
