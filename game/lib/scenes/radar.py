@@ -16,7 +16,7 @@
 
 import pygame
 from pygame import draw
-from math import cos, sin, degrees, radians
+from math import cos, sin, atan, radians, degrees
 from . import Scene
 from ..tools import draw_line_dashed
 
@@ -62,7 +62,7 @@ class Radar(Scene):
         draw_line_dashed(self.surface, (86, 176, 91), self.rdownwind, self.rbase)
         draw_line_dashed(self.surface, (86, 176, 91), self.ldownwind, self.lbase)
 
-    def label(self, aircraft, selected, label_sweep):
+    def render_label(self, aircraft, selected, label_sweep):
         # Change color if aircraft is selected
         if selected == aircraft:
             aircraft.color = (174, 179, 36)
@@ -118,6 +118,12 @@ class Radar(Scene):
         aircraft.surf.blit(aircraft.textSurf1, (9, 0))
         aircraft.surf.blit(aircraft.textSurf2, (9, displaySize[1] - 5))
 
+        aircraft.super_surf.blit(aircraft.surf, (displaySize[0], ((displaySize[0] * 2) - displaySize[1] * 2) / 2))
+
+        return displaySize
+
+    def label(self, aircraft, selected, label_sweep):
+        displaySize = self.render_label(aircraft, selected, label_sweep)
         # Creates offset to move the aircraft up when rendering
         # with size of text so small square is at actual position instead of top left corner
         aircraft.y_offset = (displaySize[1] * 2 - 10) / 2
@@ -146,8 +152,6 @@ class Radar(Scene):
                 (displaySize[0] + x_heading + 2.5, displaySize[0] - y_heading - 5)
             )
 
-        aircraft.super_surf.blit(aircraft.surf, (displaySize[0], ((displaySize[0] * 2) - displaySize[1] * 2) / 2))
-
     def show_arrival(self, arrival):
         prev_point = None
         for point in arrival:
@@ -160,3 +164,38 @@ class Radar(Scene):
 
     def hide_arrival(self):
         self.render()
+    
+    def update_line(self, aircraft, selected, mouse_pos, label_sweep):
+        mouse_x, mouse_y = mouse_pos
+        aircraft_x, aircraft_y = self.coord_to_pixel((aircraft.y, aircraft.x))
+
+        # Re-render label without heading line
+        displaySize = self.render_label(aircraft, selected, label_sweep)
+        
+        #print(mouse_x)
+        #print(aircraft_x + aircraft.x_sup_offset)
+        #print(aircraft_y + aircraft.y_offset + aircraft.y_sup_offset)
+
+        theta = atan((mouse_x - aircraft_x) / (mouse_y - aircraft_y))
+
+        if mouse_y - aircraft_y > 0:
+            x_heading = sin(theta) * (aircraft.speed / (250 / displaySize[0]))
+            y_heading = cos(theta) * (aircraft.speed / (250 / displaySize[0]))
+
+            # Draw line from center of super_surf (aircraft loc) to new point
+            pygame.draw.line(
+                aircraft.super_surf,
+                (255, 0, 0),
+                (displaySize[0] + 2.5, displaySize[0] - 5),
+                (displaySize[0] + x_heading + 2.5, displaySize[0] + y_heading - 5)
+            )
+        else:
+            x_heading = sin(theta) * (aircraft.speed / (250 / displaySize[0]))
+            y_heading = cos(theta) * (aircraft.speed / (250 / displaySize[0]))
+            # Draw line from center of super_surf (aircraft loc) to new point
+            pygame.draw.line(
+                aircraft.super_surf,
+                (255, 0, 0),
+                (displaySize[0] + 2.5, displaySize[0] - 5),
+                (displaySize[0] - x_heading + 2.5, displaySize[0] - y_heading - 5)
+            )

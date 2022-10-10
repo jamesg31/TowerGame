@@ -68,7 +68,7 @@ class Aircraft(pygame.sprite.Sprite):
         scene.label(self, selected, label_sweep)
 
     def update(self, elapsed, scene, debug):
-        from main import radar, airport_data, aircraft_data, sweep_sec, selected
+        from main import radar, airport_data, aircraft_data, sweep_sec
         # Does aircraft need to climb or descend?
         if self.target_altitude != self.altitude and self.vpath == None:
             # Calculate rate at which aircraft should climb or descend
@@ -155,6 +155,10 @@ class Aircraft(pygame.sprite.Sprite):
     def label(self):
         from main import scene, selected, label_sweep
         scene.label(self, selected, label_sweep)
+
+    def update_line(self, mouse_pos):
+        from main import scene, selected, label_sweep
+        scene.update_line(self, selected, mouse_pos, label_sweep)
 
     def change_altitude(self, altitude):
         self.target_altitude = altitude

@@ -17,7 +17,8 @@
 import pygame
 import pygame_gui
 import hjson
-from math import sqrt
+import time
+from math import sqrt, atan, degrees
 import numpy as np
 from lib.scenes import Asdex, Radar
 from lib import Aircraft
@@ -35,6 +36,7 @@ sweep_sec = 2
 debug = False
 
 elapsed = 1
+click_elapsed = None
 sweep = 0
 label_sweep = True
 running = True
@@ -102,6 +104,9 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
             collide = False
+
+            # Start timer
+            click_elapsed = time.time()
             # Detect aircraft clicks
             for aircraft in aircrafts:
                 if aircraft.rect.collidepoint(x, y):
@@ -142,6 +147,23 @@ while running:
                 else:
                     print((x / radar.scale) + airport_data["left"])
                     print(((y / radar.scale) - airport_data["top"]) * -1)
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            x, y = pygame.mouse.get_pos()
+            if selected != None:
+                aircraft_x, aircraft_y = scene.coord_to_pixel((selected.y, selected.x))
+                
+                # If button held for more than 1 seconds, set new heading
+                if time.time() - click_elapsed > 1:
+                    theta = atan((x - aircraft_x) / (y - aircraft_y))                    
+                    if y - aircraft_y < 0:
+                        if degrees(theta) > 0:
+                            selected.heading = 360 - degrees(theta)
+                        else:
+                            selected.heading = abs(degrees(theta))
+                    else:
+                        selected.heading = 180 - degrees(theta)
+            click_elapsed = None
 
         if event.type == pygame.USEREVENT:
             if event.user_type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
@@ -195,6 +217,11 @@ while running:
         sweep = 0
 
     sweep += 1
+
+    if click_elapsed != None and selected != None:
+        # If clicking for more than 1 second, draw line between selected aircraft and cursur
+        if time.time() - click_elapsed > 1:
+            selected.update_line(pygame.mouse.get_pos())
 
     for aircraft in aircrafts:
         x, y = scene.coord_to_pixel((aircraft.y, aircraft.x))
